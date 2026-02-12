@@ -1,0 +1,520 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "The AWS CloudFormation template for this Serverless application",
+  "Resources": {
+    "OomDashcloudDashwatchDasheventsLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/fxstar-alert-monitoring-service-wab-oom-cloud-watch-events"
+      }
+    },
+    "RuntimeDashexceptionDasheventsLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/fxstar-alert-monitoring-service-wab-runtime-exception-events"
+      }
+    },
+    "AlarmDashdispatcherLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/fxstar-alert-monitoring-service-wab-alarm-dispatcher"
+      }
+    },
+    "IamRoleLambdaExecution": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": {
+              "Fn::Join": [
+                "-",
+                [
+                  "fxstar-alert-monitoring-service",
+                  "wab",
+                  "lambda"
+                ]
+              ]
+            },
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:CreateLogGroup"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/fxstar-alert-monitoring-service-wab*:*"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/fxstar-alert-monitoring-service-wab*:*:*"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ssm:GetParameter",
+                    "ssm:GetParameters",
+                    "logs:DescribeSubscriptionFilters"
+                  ],
+                  "Resource": "*"
+                }
+              ]
+            }
+          }
+        ],
+        "Path": "/",
+        "RoleName": {
+          "Fn::Join": [
+            "-",
+            [
+              "fxstar-alert-monitoring-service",
+              "wab",
+              {
+                "Ref": "AWS::Region"
+              },
+              "lambdaRole"
+            ]
+          ]
+        }
+      }
+    },
+    "OomDashcloudDashwatchDasheventsLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": "galaxy-serverless-monitoring-wab",
+          "S3Key": "serverless/fxstar-alert-monitoring-service/wab/1710959568318-2024-03-20T18:32:48.318Z/fxstar-alert-monitoring-service.zip"
+        },
+        "Handler": "outofmemory_monitoring.logcheck",
+        "Runtime": "nodejs16.x",
+        "FunctionName": "fxstar-alert-monitoring-service-wab-oom-cloud-watch-events",
+        "MemorySize": 1024,
+        "Timeout": 600,
+        "Environment": {
+          "Variables": {
+            "STAGE": "wab",
+            "LOG_LEVEL": "debug",
+            "REGION": "us-west-1",
+            "PLATFORM": "fxstar",
+            "MONITORING_SERVICE_URL": "https://api-bankos.finzly.io/monitoring",
+            "API_KEY": "2LMhDB6dQp8cRhJfkKbsI4AJJHZxa8R39yLFxj7u",
+            "ALARM_SNS_ARN": "arn:aws:sns:us-west-1:107305855724:cloudwatch-alarm-monitoring-topic"
+          }
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        },
+        "Layers": [
+          "arn:aws:lambda:us-west-1:107305855724:layer:common_node_modules:1",
+          "arn:aws:lambda:us-west-1:107305855724:layer:shared_modules:1"
+        ]
+      },
+      "DependsOn": [
+        "OomDashcloudDashwatchDasheventsLogGroup"
+      ]
+    },
+    "RuntimeDashexceptionDasheventsLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": "galaxy-serverless-monitoring-wab",
+          "S3Key": "serverless/fxstar-alert-monitoring-service/wab/1710959568318-2024-03-20T18:32:48.318Z/fxstar-alert-monitoring-service.zip"
+        },
+        "Handler": "runtime_exception.logcheck",
+        "Runtime": "nodejs16.x",
+        "FunctionName": "fxstar-alert-monitoring-service-wab-runtime-exception-events",
+        "MemorySize": 1024,
+        "Timeout": 600,
+        "Environment": {
+          "Variables": {
+            "STAGE": "wab",
+            "LOG_LEVEL": "debug",
+            "REGION": "us-west-1",
+            "PLATFORM": "fxstar",
+            "MONITORING_SERVICE_URL": "https://api-bankos.finzly.io/monitoring",
+            "API_KEY": "2LMhDB6dQp8cRhJfkKbsI4AJJHZxa8R39yLFxj7u",
+            "ALARM_SNS_ARN": "arn:aws:sns:us-west-1:107305855724:cloudwatch-alarm-monitoring-topic"
+          }
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        },
+        "Layers": [
+          "arn:aws:lambda:us-west-1:107305855724:layer:common_node_modules:1",
+          "arn:aws:lambda:us-west-1:107305855724:layer:shared_modules:1"
+        ]
+      },
+      "DependsOn": [
+        "RuntimeDashexceptionDasheventsLogGroup"
+      ]
+    },
+    "AlarmDashdispatcherLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": "galaxy-serverless-monitoring-wab",
+          "S3Key": "serverless/fxstar-alert-monitoring-service/wab/1710959568318-2024-03-20T18:32:48.318Z/fxstar-alert-monitoring-service.zip"
+        },
+        "Handler": "alarm-dispatcher.dispatch",
+        "Runtime": "nodejs16.x",
+        "FunctionName": "fxstar-alert-monitoring-service-wab-alarm-dispatcher",
+        "MemorySize": 1024,
+        "Timeout": 60,
+        "Environment": {
+          "Variables": {
+            "STAGE": "wab",
+            "LOG_LEVEL": "debug",
+            "REGION": "us-west-1",
+            "PLATFORM": "fxstar",
+            "MONITORING_SERVICE_URL": "https://api-bankos.finzly.io/monitoring",
+            "API_KEY": "2LMhDB6dQp8cRhJfkKbsI4AJJHZxa8R39yLFxj7u",
+            "ALARM_SNS_ARN": "arn:aws:sns:us-west-1:107305855724:cloudwatch-alarm-monitoring-topic"
+          }
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        },
+        "Layers": [
+          "arn:aws:lambda:us-west-1:107305855724:layer:common_node_modules:1",
+          "arn:aws:lambda:us-west-1:107305855724:layer:shared_modules:1"
+        ]
+      },
+      "DependsOn": [
+        "AlarmDashdispatcherLogGroup"
+      ]
+    },
+    "OomDashcloudDashwatchDasheventsLambdaVersionvezVt61ha8i5qz5OOBlmAnvHnZRYbqcobg0alTQr44Q": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "OomDashcloudDashwatchDasheventsLambdaFunction"
+        },
+        "CodeSha256": "fKsv35NcInFCsacz17DsPw47K7BFiz3tsfLjgO3BOtE="
+      }
+    },
+    "RuntimeDashexceptionDasheventsLambdaVersion8x0RWsaTrqWPSBkGFTkh5xnTpbmYuzH8mw1pTK9mI": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "RuntimeDashexceptionDasheventsLambdaFunction"
+        },
+        "CodeSha256": "fKsv35NcInFCsacz17DsPw47K7BFiz3tsfLjgO3BOtE="
+      }
+    },
+    "AlarmDashdispatcherLambdaVersionug9mBiBU9zR9N1uASCXKLDbxjPLT0V5RPgVsLI6GB0": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "AlarmDashdispatcherLambdaFunction"
+        },
+        "CodeSha256": "fKsv35NcInFCsacz17DsPw47K7BFiz3tsfLjgO3BOtE="
+      }
+    },
+    "AlarmDashdispatcherSnsSubscriptionCloudwatchalarmmonitoringtopic": {
+      "Type": "AWS::SNS::Subscription",
+      "Properties": {
+        "TopicArn": "arn:aws:sns:us-west-1:107305855724:cloudwatch-alarm-monitoring-topic",
+        "Protocol": "lambda",
+        "Endpoint": {
+          "Fn::GetAtt": [
+            "AlarmDashdispatcherLambdaFunction",
+            "Arn"
+          ]
+        }
+      }
+    },
+    "AlarmDashdispatcherLambdaPermissionCloudwatchalarmmonitoringtopicSNS": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "AlarmDashdispatcherLambdaFunction",
+            "Arn"
+          ]
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "sns.amazonaws.com",
+        "SourceArn": "arn:aws:sns:us-west-1:107305855724:cloudwatch-alarm-monitoring-topic"
+      }
+    },
+    "OomDashcloudDashwatchDasheventsLogsSubscriptionFilterCloudWatchLog1": {
+      "Type": "AWS::Logs::SubscriptionFilter",
+      "DependsOn": "OomDashcloudDashwatchDasheventsLambdaPermissionLogsSubscriptionFilterCloudWatchLog",
+      "Properties": {
+        "LogGroupName": "WAB-PROD-BOSS-TOMCAT-LOGS",
+        "FilterPattern": "java.lang.OutOfMemoryError",
+        "DestinationArn": {
+          "Fn::GetAtt": [
+            "OomDashcloudDashwatchDasheventsLambdaFunction",
+            "Arn"
+          ]
+        }
+      }
+    },
+    "OomDashcloudDashwatchDasheventsLambdaPermissionLogsSubscriptionFilterCloudWatchLog": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "OomDashcloudDashwatchDasheventsLambdaFunction",
+            "Arn"
+          ]
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": {
+          "Fn::Join": [
+            "",
+            [
+              "logs.",
+              {
+                "Ref": "AWS::Region"
+              },
+              ".amazonaws.com"
+            ]
+          ]
+        },
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition"
+              },
+              ":logs:",
+              {
+                "Ref": "AWS::Region"
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId"
+              },
+              ":log-group:",
+              "WAB-PROD-*",
+              ":*"
+            ]
+          ]
+        }
+      }
+    },
+    "OomDashcloudDashwatchDasheventsLogsSubscriptionFilterCloudWatchLog2": {
+      "Type": "AWS::Logs::SubscriptionFilter",
+      "DependsOn": "OomDashcloudDashwatchDasheventsLambdaPermissionLogsSubscriptionFilterCloudWatchLog",
+      "Properties": {
+        "LogGroupName": "WAB-PROD-ENGINE-LOGS",
+        "FilterPattern": "java.lang.OutOfMemoryError",
+        "DestinationArn": {
+          "Fn::GetAtt": [
+            "OomDashcloudDashwatchDasheventsLambdaFunction",
+            "Arn"
+          ]
+        }
+      }
+    },
+    "OomDashcloudDashwatchDasheventsLogsSubscriptionFilterCloudWatchLog3": {
+      "Type": "AWS::Logs::SubscriptionFilter",
+      "DependsOn": "OomDashcloudDashwatchDasheventsLambdaPermissionLogsSubscriptionFilterCloudWatchLog",
+      "Properties": {
+        "LogGroupName": "WAB-PROD-FX-TOMCAT-LOGS",
+        "FilterPattern": "java.lang.OutOfMemoryError",
+        "DestinationArn": {
+          "Fn::GetAtt": [
+            "OomDashcloudDashwatchDasheventsLambdaFunction",
+            "Arn"
+          ]
+        }
+      }
+    },
+    "OomDashcloudDashwatchDasheventsLogsSubscriptionFilterCloudWatchLog4": {
+      "Type": "AWS::Logs::SubscriptionFilter",
+      "DependsOn": "OomDashcloudDashwatchDasheventsLambdaPermissionLogsSubscriptionFilterCloudWatchLog",
+      "Properties": {
+        "LogGroupName": "WAB-PROD-STARAPI-LOGS",
+        "FilterPattern": "java.lang.OutOfMemoryError",
+        "DestinationArn": {
+          "Fn::GetAtt": [
+            "OomDashcloudDashwatchDasheventsLambdaFunction",
+            "Arn"
+          ]
+        }
+      }
+    },
+    "RuntimeDashexceptionDasheventsLogsSubscriptionFilterCloudWatchLog1": {
+      "Type": "AWS::Logs::SubscriptionFilter",
+      "DependsOn": "RuntimeDashexceptionDasheventsLambdaPermissionLogsSubscriptionFilterCloudWatchLog",
+      "Properties": {
+        "LogGroupName": "WAB-PROD-BOSS-TOMCAT-LOGS",
+        "FilterPattern": "java.lang.NullPointerException",
+        "DestinationArn": {
+          "Fn::GetAtt": [
+            "RuntimeDashexceptionDasheventsLambdaFunction",
+            "Arn"
+          ]
+        }
+      }
+    },
+    "RuntimeDashexceptionDasheventsLambdaPermissionLogsSubscriptionFilterCloudWatchLog": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "RuntimeDashexceptionDasheventsLambdaFunction",
+            "Arn"
+          ]
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": {
+          "Fn::Join": [
+            "",
+            [
+              "logs.",
+              {
+                "Ref": "AWS::Region"
+              },
+              ".amazonaws.com"
+            ]
+          ]
+        },
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition"
+              },
+              ":logs:",
+              {
+                "Ref": "AWS::Region"
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId"
+              },
+              ":log-group:",
+              "WAB-PROD-*",
+              ":*"
+            ]
+          ]
+        }
+      }
+    },
+    "RuntimeDashexceptionDasheventsLogsSubscriptionFilterCloudWatchLog2": {
+      "Type": "AWS::Logs::SubscriptionFilter",
+      "DependsOn": "RuntimeDashexceptionDasheventsLambdaPermissionLogsSubscriptionFilterCloudWatchLog",
+      "Properties": {
+        "LogGroupName": "WAB-PROD-ENGINE-LOGS",
+        "FilterPattern": "java.lang.NullPointerException",
+        "DestinationArn": {
+          "Fn::GetAtt": [
+            "RuntimeDashexceptionDasheventsLambdaFunction",
+            "Arn"
+          ]
+        }
+      }
+    },
+    "RuntimeDashexceptionDasheventsLogsSubscriptionFilterCloudWatchLog3": {
+      "Type": "AWS::Logs::SubscriptionFilter",
+      "DependsOn": "RuntimeDashexceptionDasheventsLambdaPermissionLogsSubscriptionFilterCloudWatchLog",
+      "Properties": {
+        "LogGroupName": "WAB-PROD-FX-TOMCAT-LOGS",
+        "FilterPattern": "java.lang.NullPointerException",
+        "DestinationArn": {
+          "Fn::GetAtt": [
+            "RuntimeDashexceptionDasheventsLambdaFunction",
+            "Arn"
+          ]
+        }
+      }
+    },
+    "RuntimeDashexceptionDasheventsLogsSubscriptionFilterCloudWatchLog4": {
+      "Type": "AWS::Logs::SubscriptionFilter",
+      "DependsOn": "RuntimeDashexceptionDasheventsLambdaPermissionLogsSubscriptionFilterCloudWatchLog",
+      "Properties": {
+        "LogGroupName": "WAB-PROD-STARAPI-LOGS",
+        "FilterPattern": "java.lang.NullPointerException",
+        "DestinationArn": {
+          "Fn::GetAtt": [
+            "RuntimeDashexceptionDasheventsLambdaFunction",
+            "Arn"
+          ]
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "ServerlessDeploymentBucketName": {
+      "Value": "galaxy-serverless-monitoring-wab",
+      "Export": {
+        "Name": "sls-fxstar-alert-monitoring-service-wab-ServerlessDeploymentBucketName"
+      }
+    },
+    "OomDashcloudDashwatchDasheventsLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "OomDashcloudDashwatchDasheventsLambdaVersionvezVt61ha8i5qz5OOBlmAnvHnZRYbqcobg0alTQr44Q"
+      },
+      "Export": {
+        "Name": "sls-fxstar-alert-monitoring-service-wab-OomDashcloudDashwatchDasheventsLambdaFunctionQualifiedArn"
+      }
+    },
+    "RuntimeDashexceptionDasheventsLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "RuntimeDashexceptionDasheventsLambdaVersion8x0RWsaTrqWPSBkGFTkh5xnTpbmYuzH8mw1pTK9mI"
+      },
+      "Export": {
+        "Name": "sls-fxstar-alert-monitoring-service-wab-RuntimeDashexceptionDasheventsLambdaFunctionQualifiedArn"
+      }
+    },
+    "AlarmDashdispatcherLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "AlarmDashdispatcherLambdaVersionug9mBiBU9zR9N1uASCXKLDbxjPLT0V5RPgVsLI6GB0"
+      },
+      "Export": {
+        "Name": "sls-fxstar-alert-monitoring-service-wab-AlarmDashdispatcherLambdaFunctionQualifiedArn"
+      }
+    }
+  }
+}

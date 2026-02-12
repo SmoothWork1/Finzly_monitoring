@@ -1,0 +1,140 @@
+service: exception-monitoring-service
+useDotenv: true
+custom:    
+  STAGE: ${opt:stage}
+  LOG_LEVEL: ${env:LOG_LEVEL}
+  REGION: ${env:REGION}
+  ACCOUNT_ID: "#{AWS::AccountId}"
+  DEPLOYMENT_BUCKET: ${env:DEPLOYMENT_BUCKET}
+  PLATFORM: ${env:PLATFORM}
+  MONITORING_SERVICE_URL: ${env:MONITORING_SERVICE_URL}
+  API_KEY: ${env:API_KEY}
+  profiles:
+    tooling: tooling
+    dev: dev
+    test: test
+    uat: uat
+    prod: prod
+plugins:
+  - serverless-latest-layer-version
+  - serverless-deployment-bucket  
+
+provider:
+  name: aws
+  #profile: ${self:custom.profiles.${self:custom.STAGE}}
+  runtime: nodejs14.x
+  region: ${self:custom.REGION}
+  deploymentBucket:
+    name: ${self:custom.DEPLOYMENT_BUCKET}
+    serverSideEncryption: AES256
+  iam:
+    role:
+      statements:      
+        - Effect: Allow
+          Action:
+            - ssm:GetParameter
+            - ssm:GetParameters
+            - logs:DescribeSubscriptionFilters
+          Resource: "*" # arn:aws:ssm:${self:custom.REGION}::parameter/tooling/*    
+
+  environment:
+    STAGE: ${self:custom.STAGE}
+    LOG_LEVEL: ${self:custom.LOG_LEVEL}
+    REGION: ${self:custom.REGION}
+    PLATFORM: ${self:custom.PLATFORM}
+    MONITORING_SERVICE_URL: ${self:custom.MONITORING_SERVICE_URL}
+    API_KEY: ${self:custom.API_KEY}
+
+functions:
+  runtime-exception-events:
+    handler: runtime_exception.logcheck
+    timeout: 600   
+    events:
+      - cloudwatchLog:
+          logGroup: '/aws/lambda/galaxy-encryption-service-prod-decrypt-event-listener'
+          filter: 'Exception'
+      - cloudwatchLog:
+          logGroup: '/aws/lambda/galaxy-encryption-service-prod-encrypt-event-listener'
+          filter: 'Exception'
+      - cloudwatchLog:
+          logGroup: '/aws/lambda/galaxy-compliance-service-prod-compliance-scanner'
+          filter: 'Exception'
+      - cloudwatchLog:
+          logGroup: '/aws/lambda/galaxy-compliance-service-prod-initiate-file-processing'
+          filter: 'Exception'
+      - cloudwatchLog:
+          logGroup: '/aws/lambda/galaxy-compliance-service-prod-process-file'
+          filter: 'Exception'
+      - cloudwatchLog:
+          logGroup: '/aws/lambda/galaxy-compliance-service-prod-publish-compliance-request'
+          filter: 'Exception'
+      - cloudwatchLog:
+          logGroup: '/aws/lambda/galaxy-compliance-service-prod-refresh-redis'
+          filter: 'Exception'
+      - cloudwatchLog:
+          logGroup: '/aws/lambda/galaxy-compliance-service-prod-stage-file'
+          filter: 'Exception'
+      - cloudwatchLog:
+          logGroup: '/aws/lambda/galaxy-compliance-service-prod-sync-redis'
+          filter: 'Exception'
+      - cloudwatchLog:
+          logGroup: '/aws/lambda/galaxy-blocklist-service-prod-blocklist-screen'
+          filter: 'Exception'
+      - cloudwatchLog:
+          logGroup: '/aws/lambda/galaxy-notification-service-prod-adhoc-notification'
+          filter: 'Exception'
+      - cloudwatchLog:
+          logGroup: '/aws/lambda/galaxy-notification-service-prod-generate-notification'
+          filter: 'Exception'
+      - cloudwatchLog:
+          logGroup: '/aws/lambda/galaxy-notification-service-prod-retry-notification'
+          filter: 'Exception'
+      - cloudwatchLog:
+          logGroup: '/aws/lambda/galaxy-notification-service-prod-email-publisher'
+          filter: 'Exception'
+      - cloudwatchLog:
+          logGroup: '/aws/lambda/galaxy-notification-service-prod-sftp-publisher'
+          filter: 'Exception'
+      - cloudwatchLog:
+          logGroup: '/aws/lambda/galaxy-notification-service-prod-sms-publisher'
+          filter: 'Exception'
+      - cloudwatchLog:
+          logGroup: '/aws/lambda/galaxy-notification-service-prod-webhook-publisher'
+          filter: 'Exception'
+      - cloudwatchLog:
+          logGroup: '/aws/lambda/payment-monitoring-service-prod-failed-payments-scheduler'
+          filter: 'Exception'
+      - cloudwatchLog:
+          logGroup: '/aws/lambda/payment-monitoring-service-prod-stuck-payments-scheduler'
+          filter: 'Exception'
+      - cloudwatchLog:
+          logGroup: '/aws/lambda/platform-monitoring-service-prod-stuck-notifications-scheduler'
+          filter: 'Exception'
+      - cloudwatchLog:
+          logGroup: '/aws/lambda/payment-monitoring-service-prod-failed-messages-scheduler'
+          filter: 'Exception'
+      - cloudwatchLog:
+          logGroup: '/aws/lambda/ssl-monitoring-service-prod-acm_ssl_check'
+          filter: 'Exception'
+      - cloudwatchLog:
+          logGroup: '/aws/lambda/url-monitoring-service-prod-url-monitoring-scheduler'
+          filter: 'Exception'
+      - cloudwatchLog:
+          logGroup: '/aws/lambda/job-monitoring-service-prod-job-monitor-scheduler'
+          filter: 'Exception'
+      - cloudwatchLog:
+          logGroup: '/aws/lambda/reminder-service-prod-payment-approvals-reminder'
+          filter: 'Exception'
+      - cloudwatchLog:
+          logGroup: '/aws/lambda/reminder-service-prod-positive-pay-reminder'
+          filter: 'Exception'
+      - cloudwatchLog:
+          logGroup: '/aws/lambda/galaxy-staticdata-service-prod-routing-number-importer'
+          filter: 'ROUTING_NUMBER_FILE_STAGE_LOAD_FAILED'
+      #- cloudwatchLog:
+      #    logGroup: ${self:custom.LOGGROUP_BOSS_TOMCAT}
+      #    filter: '[(message="*OutOfMemoryError*") || (message="*Token validation skipped*")]'
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:#{AWS::AccountId}:layer:common_node_modules:latest
+      - arn:aws:lambda:${self:custom.REGION}:#{AWS::AccountId}:layer:shared_modules:latest
+  

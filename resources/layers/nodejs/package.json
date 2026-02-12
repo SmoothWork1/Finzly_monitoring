@@ -1,0 +1,10 @@
+{
+	"name": "resources",
+	"description": "",
+	"version": "0.1.0",
+	"devDependencies": {
+		"serverless-deployment-bucket": "^1.6.0",
+		"serverless-plugin-optimize": "^4.2.1-rc.1",
+		"serverless-ssm-fetch": "^2.0.0"
+	}
+}

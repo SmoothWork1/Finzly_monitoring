@@ -1,0 +1,195 @@
+[{
+    "host":"172.16.12.16",
+    "name":"StarAPI-Server-1",
+    "user":"ubuntu",
+    "private_key":"/home/ec2-user/.ssh/id_rsa",
+    "applications":[{
+            "name":"StarAPI Registry",
+            "process_name":"star-registry-1.0.war"
+    },{
+            "name":"StarAPI Config Server",
+            "process_name":"star-config-1.0.war"
+    },{
+            "name":"StarAPI Auth Server",
+            "process_name":"star-auth-1.0.war"
+    },{
+            "name":"StarAPI Notifications Service",
+            "process_name":"star-notifications-service-1.0.war"
+    },{
+            "name":"StarAPI OOBA Service",
+            "process_name":"star-ooba-service-1.0.war"
+    },{
+            "name":"StarAPI Authentication Settings Service",
+            "process_name":"star-authentication-setting-service-1.0.war"
+    },{
+            "name":"StarAPI Entity Service",
+            "process_name":"star-entity-service-1.0.war"
+    },{
+            "name":"StarAPI Payment Service",
+            "process_name":"star-payment-service-1.0.war"
+    },{
+            "name":"StarAPI Calender Service",
+            "process_name":"star-calendar-service-1.0.jar"
+    },{
+            "name":"StarAPI BOSS Bulk Payments Service",
+            "process_name":"boss-bulk-payment-service-1.0.jar"
+    }]
+},{
+    "host":"172.16.12.78",
+    "name":"StarAPI-Server-2",
+    "user":"ubuntu",
+    "private_key":"/home/ec2-user/.ssh/id_rsa",
+    "applications":[{
+            "name":"StarAPI Auth Server",
+            "process_name":"star-auth-1.0.war"
+    },{
+            "name":"StarAPI Notifications Service",
+            "process_name":"star-notifications-service-1.0.war"
+    },{
+            "name":"StarAPI OOBA Service",
+            "process_name":"star-ooba-service-1.0.war"
+    },{
+            "name":"StarAPI Authentication Settings Service",
+            "process_name":"star-authentication-setting-service-1.0.war"
+    },{
+            "name":"StarAPI Entity Service",
+            "process_name":"star-entity-service-1.0.war"
+    },{
+            "name":"StarAPI Payment Service",
+            "process_name":"star-payment-service-1.0.war"
+    },{
+            "name":"StarAPI Calendar Service",
+            "process_name":"star-calendar-service-1.0.jar"
+    },{
+            "name":"StarAPI BOSS Bulk Payments Service",
+            "process_name":"boss-bulk-payment-service-1.0.jar"
+    }]
+},{
+    "host":"172.16.12.14",
+    "name":"Tomcat BOSS - Server 1",
+    "user":"ubuntu",
+    "private_key":"/home/ec2-user/.ssh/id_rsa",
+    "applications":[{
+            "name":"BOSS Server",
+            "process_name":"catalina.home=/opt/tomcat_boss"
+    },{
+            "name":"Cas Server",
+            "process_name":"catalina.home=/opt/tomcat_sso"
+    },{
+            "name":"FXWEB Server",
+            "process_name":"catalina.home=/opt/tomcat_fxweb"
+    }]
+},{
+    "host":"172.16.12.98",
+    "name":"Tomcat BOSS - Server 2",
+    "user":"ubuntu",
+    "private_key":"/home/ec2-user/.ssh/id_rsa",
+    "applications":[{
+            "name":"BOSS Server",
+            "process_name":"catalina.home=/opt/tomcat_boss"
+    },{
+            "name":"Cas Server",
+            "process_name":"catalina.home=/opt/tomcat_sso"
+    },{
+            "name":"FXWEB Server",
+            "process_name":"catalina.home=/opt/tomcat_fxweb"
+    }]
+},{
+    "host":"172.16.12.40",
+    "name":"Tomcat FXOFFICE - Server 1",
+    "user":"ubuntu",
+    "private_key":"/home/ec2-user/.ssh/id_rsa",
+    "applications":[{
+            "name":"FXOffice Server",
+            "process_name":"catalina.home=/opt/tomcat_fxoffice"
+    }]
+},{
+    "host":"172.16.12.121",
+    "name":"Tomcat FXOFFICE - Server 2",
+    "user":"ubuntu",
+    "private_key":"/home/ec2-user/.ssh/id_rsa",
+    "applications":[{
+            "name":"FXOffice Server",
+            "process_name":"catalina.home=/opt/tomcat_fxoffice"
+    }]
+},{
+    "host":"172.16.12.24",
+    "name":"Engines",
+    "user":"ubuntu",
+    "private_key":"/home/ec2-user/.ssh/id_rsa",
+    "applications":[{
+            "name":"DispatchEngine",
+            "process_name":"com.swapstech.fxstar.workflow.service.DispatchEngine"
+    },{
+            "name":"SchedulerEngine",
+            "process_name":"com.swapstech.fxstar.workflow.service.SchedulerEngine"
+    },{
+            "name":"WorkflowEngine",
+            "process_name":"com.swapstech.fxstar.workflow.service.WorkflowEngine",
+            "additional_info":"Instance=1"
+    },{
+            "name":"WorkflowEngine_2",
+            "process_name":"com.swapstech.fxstar.workflow.service.WorkflowEngine",
+            "additional_info":"Instance=2"
+    },{
+            "name":"CIEngine",
+            "process_name":"com.swapstech.fxstar.ci.engine.CIEngine"
+    },{
+            "name":"SMSEngine",
+            "process_name":"com.swapstech.fxstar.notification.sms.service.SMSEngine"
+    },{
+            "name":"EmailEngine",
+            "process_name":"com.swapstech.fxstar.notification.email.service.EmailEngine"
+    },{
+            "name":"ReutersWebSocketEngine",
+            "process_name":"com.swapstech.fxstar.marketdata.reuters.websocket.service.ReutersWebSocketEngine"
+    },{
+            "name":"StarAPI Pricing Adapter",
+            "process_name":"/home/ubuntu/engines/star-pricing-adaptor-service-1.0.jar"
+    },{
+            "name":"SwiftMQEngine",
+            "process_name":"com.swapstech.fxstar.message.swiftmq.consumer.service.SwiftMQEngine"
+    },{
+            "name":"BottomLineEngine",
+            "process_name":"com.swapstech.fxstar.bottomline.service.BottomLineEngine"
+    },{
+            "name":"JobScheduler",
+            "process_name":"com.swapstech.boss.common.util.JobScheduler"
+    }]
+},{
+    "host":"172.16.12.30",
+    "name":"Mongo Server 1",
+    "user":"ubuntu",
+    "private_key":"/home/ec2-user/.ssh/id_rsa",
+    "applications":[{
+            "name":"Mongo DB",
+            "process_name":"/usr/bin/mongod --config /etc/mongod.conf"
+    }]
+},{
+    "host":"172.16.12.92",
+    "name":"Mongo Server 2",
+    "user":"ubuntu",
+    "private_key":"/home/ec2-user/.ssh/id_rsa",
+    "applications":[{
+            "name":"Mongo DB",
+            "process_name":"/usr/bin/mongod --config /etc/mongod.conf"
+    }]
+},{
+    "host":"172.16.12.36",
+    "name":"RabbitMQ Server 1",
+    "user":"ubuntu",
+    "private_key":"/home/ec2-user/.ssh/id_rsa",
+    "applications":[{
+            "name":"RabbitMQ",
+            "process_name":"/usr/lib/erlang/erts-7.3/bin/beam"
+    }]
+},{
+    "host":"172.16.12.103",
+    "name":"RabbitMQ Server 2",
+    "user":"ubuntu",
+    "private_key":"/home/ec2-user/.ssh/id_rsa",
+    "applications":[{
+            "name":"RabbitMQ",
+            "process_name":"/usr/lib/erlang/erts-7.3/bin/beam"
+    }]
+}]

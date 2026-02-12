@@ -1,0 +1,63 @@
+service: monitoring-layer-manager
+useDotenv: true
+frameworkVersion: '3'
+
+custom:
+  STAGE: ${opt:stage}
+  REGION: ${env:REGION}
+  ACCOUNT_ID: ${aws:accountId}
+  LOG_LEVEL: ${env:LOG_LEVEL}
+  DEPLOYMENT_BUCKET: ${env:DEPLOYMENT_BUCKET}
+  profiles:
+    dev: monitor-dev
+    test: test
+    uat: uat
+    preprod: preprod
+    prod: prod
+    dr: dr
+    ffc: ffc
+    arv: arv
+    fcb: fcb
+    fnb: fnb
+    fhb: fhb
+    pwb: pwb
+    ppb: ppb
+    manu: manu
+    bmo: bmo
+    snv: snv
+    uqa: uqa
+    wab: wab
+    inb: inb
+    pcb: pcb
+    poc: poc
+plugins:
+  - serverless-deployment-bucket
+  #- serverless-plugin-optimize
+provider:
+  name: aws
+  stage: ${self:custom.STAGE}
+  region: ${self:custom.REGION}
+  #profile: ${self:custom.profiles.${self:custom.STAGE}}
+  deploymentBucket:
+    name: ${self:custom.DEPLOYMENT_BUCKET}
+    serverSideEncryption: AES256
+  runtime: nodejs14.x
+  environment:
+    STAGE: ${self:custom.STAGE}
+    ACCOUNT_ID: ${aws:accountId}
+    LOG_LEVEL: ${self:custom.LOG_LEVEL}
+    REGION: ${self:custom.REGION}
+package:
+  patterns:
+    - '!common_node_modules/nodejs/node_modules/**'
+  #excludeDevDependencies: true
+
+layers:
+  shared_modules:
+    name: monit_shared_${opt:stage, self:provider.stage}
+    path: shared_modules
+    retain: true
+  common_node_modules:
+    name: monit_common_${opt:stage, self:provider.stage}
+    path: common_node_modules
+    retain: true

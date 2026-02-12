@@ -1,0 +1,26 @@
+cloudwatch_oom_events:
+    - cloudwatchLog:
+        logGroup: ftb-prod-boss-tomcat
+        filter: 'java.lang.OutOfMemoryError'
+    - cloudwatchLog:
+        logGroup: ftb-prod-engines-logs
+        filter: 'java.lang.OutOfMemoryError'
+    - cloudwatchLog:
+        logGroup: ftb-prod-fx-tomcat
+        filter: 'java.lang.OutOfMemoryError'
+    - cloudwatchLog:
+        logGroup: ftb-prod-star-api
+        filter: 'java.lang.OutOfMemoryError'
+cloudwatch_npe_events:
+    - cloudwatchLog:
+        logGroup: ftb-prod-boss-tomcat
+        filter: 'java.lang.NullPointerException'
+    - cloudwatchLog:
+        logGroup: ftb-prod-engines-logs
+        filter: 'java.lang.NullPointerException'
+    - cloudwatchLog:
+        logGroup: ftb-prod-fx-tomcat
+        filter: 'java.lang.NullPointerException'
+    - cloudwatchLog:
+        logGroup: ftb-prod-star-api
+        filter: 'java.lang.NullPointerException'

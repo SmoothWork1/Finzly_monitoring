@@ -1,0 +1,46 @@
+service: monitoring-security-manager
+useDotenv: true
+frameworkVersion: '3'
+
+custom:
+  STAGE: ${opt:stage}
+  LOG_LEVEL: ${env:LOG_LEVEL}
+  REGION: ${env:REGION}
+  ACCOUNT_ID: ${aws:accountId}
+  DEPLOYMENT_BUCKET: ${env:DEPLOYMENT_BUCKET}
+  VPC_SECURITY_GROUP: ${env:VPC_SECURITY_GROUP}
+  VPC_SUBNET: ${env:VPC_SUBNET}
+  profiles:
+    tooling: tooling
+    dev: dev
+    test: test
+    uat: uat
+    preprod: preprod
+    prod: prod
+    poc: poc
+plugins:
+  - serverless-latest-layer-version
+  - serverless-deployment-bucket
+provider:
+  name: aws
+  #profile: ${self:custom.profiles.${self:custom.STAGE}}
+  runtime: nodejs16.x
+  region: ${self:custom.REGION}
+  deploymentBucket:
+    name: ${self:custom.DEPLOYMENT_BUCKET}
+    serverSideEncryption: AES256
+  
+  environment:
+    STAGE: ${self:custom.STAGE}
+    LOG_LEVEL: ${self:custom.LOG_LEVEL}
+
+functions:
+  monitoring-authorizer:
+    handler: authorizer.handler
+    vpc:
+      securityGroupIds:
+        - ${self:custom.VPC_SECURITY_GROUP}
+      subnetIds:
+        - ${self:custom.VPC_SUBNET}
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:monit_common_${self:custom.STAGE}:latest

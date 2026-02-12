@@ -1,0 +1,32 @@
+cloudwatch_oom_events:
+    - cloudwatchLog:
+        logGroup: uqa-prod-boss-tomcat
+        filter: 'java.lang.OutOfMemoryError'
+    - cloudwatchLog:
+        logGroup: uqa-prod-engines-logs
+        filter: 'java.lang.OutOfMemoryError'
+    - cloudwatchLog:
+        logGroup: uqa-prod-fx-tomcat
+        filter: 'java.lang.OutOfMemoryError'
+    - cloudwatchLog:
+        logGroup: uqa-prod-star-api
+        filter: 'java.lang.OutOfMemoryError'
+    - cloudwatchLog:
+        logGroup: uqa-prod-rabbit-logs
+        filter: 'java.lang.OutOfMemoryError'
+cloudwatch_npe_events:
+    - cloudwatchLog:
+        logGroup: 'uqa-prod-boss-tomcat'
+        filter: 'java.lang.NullPointerException'
+    - cloudwatchLog:
+        logGroup: uqa-prod-engines-logs
+        filter: 'java.lang.NullPointerException'
+    - cloudwatchLog:
+        logGroup: uqa-prod-fx-tomcat
+        filter: 'java.lang.NullPointerException'
+    - cloudwatchLog:
+        logGroup: uqa-prod-star-api
+        filter: 'java.lang.NullPointerException'
+    - cloudwatchLog:
+        logGroup: uqa-prod-rabbit-logs
+        filter: 'java.lang.OutOfMemoryError'

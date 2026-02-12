@@ -1,0 +1,32 @@
+cloudwatch_oom_events:
+    - cloudwatchLog:
+        logGroup: FCB-PROD-BOSS-TOMCAT-LOGS
+        filter: 'java.lang.OutOfMemoryError'
+    - cloudwatchLog:
+        logGroup: FCB-PROD-ENGINE-LOGS
+        filter: 'java.lang.OutOfMemoryError'
+    - cloudwatchLog:
+        logGroup: FCB-PROD-FX-TOMCAT-LOGS
+        filter: 'java.lang.OutOfMemoryError'
+    - cloudwatchLog:
+        logGroup: FCB-PROD-STARAPI-LOGS
+        filter: 'java.lang.OutOfMemoryError'
+    - cloudwatchLog:
+        logGroup: FCB-PROD-FXRETAIL-TOMCAT-LOGS
+        filter: 'java.lang.OutOfMemoryError'
+cloudwatch_npe_events:
+    - cloudwatchLog:
+        logGroup: FCB-PROD-BOSS-TOMCAT-LOGS
+        filter: 'java.lang.NullPointerException'
+    - cloudwatchLog:
+        logGroup: FCB-PROD-ENGINE-LOGS
+        filter: 'java.lang.NullPointerException'
+    - cloudwatchLog:
+        logGroup: FCB-PROD-FX-TOMCAT-LOGS
+        filter: 'java.lang.NullPointerException'
+    - cloudwatchLog:
+        logGroup: FCB-PROD-STARAPI-LOGS
+        filter: 'java.lang.NullPointerException'
+    - cloudwatchLog:
+        logGroup: FCB-PROD-FXRETAIL-TOMCAT-LOGS
+        filter: 'java.lang.NullPointerException'

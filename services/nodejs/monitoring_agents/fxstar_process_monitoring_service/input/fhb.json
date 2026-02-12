@@ -1,0 +1,177 @@
+[{
+    "host":"172.25.10.186",
+    "name":"StarAPI-Server-1",
+    "user":"ubuntu",
+    "private_key":"/home/ubuntu/.ssh/id_rsa",
+    "applications":[{
+            "name":"StarAPI Registry",
+            "process_name":"star-registry-1.0.war"
+    },{
+            "name":"StarAPI Config Server",
+            "process_name":"star-config-1.0.war"
+    },{
+            "name":"StarAPI Auth Server",
+            "process_name":"star-auth-1.0.war"
+    },{
+            "name":"StarAPI Notifications Service",
+            "process_name":"star-notifications-service-1.0.war"
+    },{
+            "name":"StarAPI OOBA Service",
+            "process_name":"star-ooba-service-1.0.war"
+    },{
+            "name":"StarAPI Authentication Settings Service",
+            "process_name":"star-authentication-setting-service-1.0.war"
+    },{
+            "name":"StarAPI Entity Service",
+            "process_name":"star-entity-service-1.0.war"
+    },{
+            "name":"StarAPI Payment Server",
+            "process_name":"star-payment-service-1.0.war"
+    },{
+            "name":"StarAPI BOSS Bulk Payments Service",
+            "process_name":"boss-bulk-payment-service-1.0.jar"
+    }]
+},{
+    "host":"172.25.10.223",
+    "name":"StarAPI-Server-2",
+    "user":"ubuntu",
+    "private_key":"/home/ubuntu/.ssh/id_rsa",
+    "applications":[{
+            "name":"StarAPI Auth Server",
+            "process_name":"star-auth-1.0.war"
+    },{
+            "name":"StarAPI Notifications Service",
+            "process_name":"star-notifications-service-1.0.war"
+    },{
+            "name":"StarAPI OOBA Service",
+            "process_name":"star-ooba-service-1.0.war"
+    },{
+            "name":"StarAPI Authentication Settings Service",
+            "process_name":"star-authentication-setting-service-1.0.war"
+    },{
+            "name":"StarAPI Entity Service",
+            "process_name":"star-entity-service-1.0.war"
+    },{
+            "name":"StarAPI Payment Server",
+            "process_name":"star-payment-service-1.0.war"
+    },{
+            "name":"StarAPI BOSS Bulk Payments Service",
+            "process_name":"boss-bulk-payment-service-1.0.jar"
+    }]
+},{
+    "host":"172.25.10.140",
+    "name":"Tomcat BOSS - Server 1",
+    "user":"ubuntu",
+    "private_key":"/home/ubuntu/.ssh/id_rsa",
+    "applications":[{
+            "name":"BOSS Server",
+            "process_name":"catalina.home=/opt/tomcat_boss"
+    },{
+            "name":"CAS Server",
+            "process_name":"catalina.home=/opt/tomcat_sso"
+    },{
+            "name":"FXWEB Server",
+            "process_name":"catalina.home=/opt/tomcat_fxweb"
+    }]
+},{
+    "host":"172.25.10.196",
+    "name":"Tomcat BOSS - Server 2",
+    "user":"ubuntu",
+    "private_key":"/home/ubuntu/.ssh/id_rsa",
+    "applications":[{
+            "name":"BOSS Server",
+            "process_name":"catalina.home=/opt/tomcat_boss"
+    },{
+            "name":"CAS Server",
+            "process_name":"catalina.home=/opt/tomcat_sso"
+    },{
+            "name":"FXWEB Server",
+            "process_name":"catalina.home=/opt/tomcat_fxweb"
+    }]
+},{
+    "host":"172.25.10.132",
+    "name":"Tomcat FXOFFICE - Server 1",
+    "user":"ubuntu",
+    "private_key":"/home/ubuntu/.ssh/id_rsa",
+    "applications":[{
+            "name":"FXOffice Server",
+            "process_name":"catalina.home=/opt/tomcat_fxoffice"
+    }]
+},{
+    "host":"10.16.13.214",
+    "name":"Tomcat FXOFFICE - Server 2",
+    "user":"ubuntu",
+    "private_key":"/home/ubuntu/.ssh/id_rsa",
+    "applications":[{
+            "name":"FXOffice Server",
+            "process_name":"catalina.home=/opt/tomcat_fxoffice"
+    }]
+},{
+    "host":"172.25.10.178",
+    "name":"Engines",
+    "user":"ubuntu",
+    "private_key":"/home/ubuntu/.ssh/id_rsa",
+    "applications":[{
+            "name":"DispatchEngine",
+            "process_name":"com.swapstech.fxstar.workflow.service.DispatchEngine"
+    },{
+            "name":"SchedulerEngine",
+            "process_name":"com.swapstech.fxstar.workflow.service.SchedulerEngine"
+    },{
+            "name":"WorkflowEngine",
+            "process_name":"com.swapstech.fxstar.workflow.service.WorkflowEngine",
+            "additional_info":"Instance=1"
+    },{
+            "name":"SMSEngine",
+            "process_name":"com.swapstech.fxstar.notification.sms.service.SMSEngine"
+    },{
+            "name":"HazelCasteEngine",
+            "process_name":"com.swapstech.fxstar.etrading.cache.HzCacheEngine"
+    },{
+            "name":"EmailEngine",
+            "process_name":"com.swapstech.fxstar.notification.email.service.EmailEngine"
+    },{
+            "name":"CIEngine",
+            "process_name":"com.swapstech.fxstar.ci.engine.CIEngine"
+    },{
+            "name":"PaymentAdaptor Engine",
+            "process_name":" /home/ubuntu/engines/star-pricing-adaptor-service-1.0.jar"
+    },{
+             "name":"FSSStreamingFIXEngine",
+             "process_name":"com.swapstech.fxstar.etrading.fss.services.FSSStreamingFixEngine"
+    },{
+            "name":"FSSTradingFIXEngine",
+            "process_name":"com.swapstech.fxstar.etrading.fss.services.FSSTradingFixEngine"
+
+    },{
+            "name":"JobScheduler",
+            "process_name":"com.swapstech.boss.common.util.JobScheduler"
+    }]
+},{
+    "host":"172.25.10.170",
+    "name":"Mongo Server 1",
+    "user":"ubuntu",
+    "private_key":"/home/ubuntu/.ssh/id_rsa",
+    "applications":[{
+            "name":"Mongo DB",
+            "process_name":"/usr/bin/mongod --config /etc/mongod.conf"
+    }]
+},{
+    "host":"172.25.10.217",
+    "name":"Mongo Server 2",
+    "user":"ubuntu",
+    "private_key":"/home/ubuntu/.ssh/id_rsa",
+    "applications":[{
+            "name":"Mongo DB",
+            "process_name":"/usr/bin/mongod --config /etc/mongod.conf"
+    }]
+},{
+    "host":"172.25.10.227",
+    "name":"RabbitMQ Server 2",
+    "user":"ubuntu",
+    "private_key":"/home/ubuntu/.ssh/id_rsa",
+    "applications":[{
+            "name":"RabbitMQ",
+            "process_name":"/usr/lib/erlang/erts-7.3/bin/beam"
+    }]
+}]

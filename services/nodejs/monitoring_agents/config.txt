@@ -1,0 +1,88 @@
+--------------------
+agent services
+---------------------
+1. Define the role 'galaxy-monitoring-crossaccount-role' in target
+ - Add Policy 'MonitoringSQSPublishPolicy'
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": [
+                "sqs:GetQueueUrl",
+                "sqs:SendMessage"
+            ],
+            "Resource": "arn:aws:sqs:*:141362138895:*"
+        }
+    ]
+}
+ - AssumeRole.Trust Relationship
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::791109253180:role/ach-monitoring-service-prod-us-east-2-lambdaRole"
+            },
+            "Action": "sts:AssumeRole"
+        },
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::791109253180:role/payment-monitoring-service-prod-us-east-2-lambdaRole"
+            },
+            "Action": "sts:AssumeRole"
+        },
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::791109253180:role/ssl-monitoring-service-prod-us-east-2-lambdaRole"
+            },
+            "Action": "sts:AssumeRole"
+        },
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::791109253180:role/exception-monitoring-service-prod-us-east-2-lambdaRole"
+            },
+            "Action": "sts:AssumeRole"
+        },
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::791109253180:role/url-monitoring-service-prod-us-east-2-lambdaRole"
+            },
+            "Action": "sts:AssumeRole"
+        },
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::791109253180:role/job-monitoring-service-prod-us-east-2-lambdaRole"
+            },
+            "Action": "sts:AssumeRole"
+        },
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::791109253180:role/platform-monitoring-service-prod-us-east-2-lambdaRole"
+            },
+            "Action": "sts:AssumeRole"
+        }
+    ]
+}
+2. Makesure you have granted the asumerole permissions to lambda in serverless.yml
+{
+    "Action": [
+        "sts:AssumeRole"
+    ],
+    "Resource": "arn:aws:iam::141362138895:role/galaxy-sslexpiry-crossaccount-role",
+    "Effect": "Allow"
+}
+
+3. SSL Hosts definition in paramter store. Comma separated list of domain names (without https etc)
+/config/bankos/global_dev/monitoring.ssl.hosts
+    
+3. ##### VERY IMPORTANT #####
+Any time you remove ssl_service lambda and redeploy, you will have to update the assumedRole entry in traget account's trusted Relationship

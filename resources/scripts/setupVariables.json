@@ -1,0 +1,49 @@
+{
+	"sql": {
+		"db_host": "finzly-bankos-dev.czmo30tbimvj.us-east-2.rds.amazonaws.com",
+		"db_user": "finzly_user",
+		"db_pass": "km*mdnHB&_zB!KNP58",
+		"db_name": "",
+		"db_port": "3309"
+	},
+	"cognito": {
+		"userPool": {
+			"name": "galaxy-monitoring-admin-dev"
+		},
+		"identityPool": {
+			"name": "galaxy-monitoring-admin-dev"
+		},
+		"userPoolClient": {
+			"name": "galaxy-monitoring-admin-web-dev"
+		}
+	},
+	"aws": {
+		"region": "us-east-2"
+	},
+	"iam": {
+		"policy": {
+			"admin": "galaxy-monitoring-admin-dev-policy"
+		},
+		"role": {
+			"admin": "galaxy-monitoring-admin-dev-auth-role",
+			"unauthenticated": "galaxy-monitoring-admin-dev-unauth-role"
+		}
+	},
+	"mysql": {
+		"db_host": "finzly-bankos-dev.czmo30tbimvj.us-east-2.rds.amazonaws.com",
+		"db_user": "finzly_user",
+		"db_pass": "km*mdnHB&_zB!KNP58",
+		"db_name": "",
+		"db_port": "3309",
+		"instanceClass": "db.t4g.micro",
+		"instanceName": "finzly-bankos-dev",
+		"instanceGib": "20",
+		"engine": "mysql",
+		"engineVersion": "8.0",
+		"storageType": "standard",
+		
+		"/*instance class options*/": "https://aws.amazon.com/rds/mysql/pricing/",
+		"/*password criteria*/": "The password can include any printable ASCII character except /, \", or @. Must contain from 8 to 128 characters.",
+		"/*engine versions available*/": "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_MySQL.html"
+	}
+}

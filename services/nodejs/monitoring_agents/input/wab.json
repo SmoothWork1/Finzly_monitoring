@@ -1,0 +1,184 @@
+[{
+    "host":"172.16.12.200",
+    "name":"StarAPI-Server-1",
+    "user":"ubuntu",
+    "private_key":"/home/ec2-user/.ssh/id_rsa",
+    "applications":[{
+            "name":"StarAPI Registry",
+            "process_name":"star-registry-1.0.war"
+    },{
+            "name":"StarAPI Config Server",
+            "process_name":"star-config-1.0.war"
+    },{
+            "name":"StarAPI Auth Server",
+            "process_name":"star-auth-1.0.war"
+    },{
+            "name":"StarAPI Notifications Service",
+            "process_name":"star-notifications-service-1.0.war"
+    },{
+            "name":"StarAPI OOBA Service",
+            "process_name":"star-ooba-service-1.0.war"
+    },{
+            "name":"StarAPI Authentication Settings Service",
+            "process_name":"star-authentication-setting-service-1.0.war"
+    },{
+            "name":"StarAPI BOSS Bulk Payments Service",
+            "process_name":"boss-bulk-payment-service-cas-1.0.jar"
+    }]
+},{
+    "host":"172.16.13.151",
+    "name":"StarAPI-Server-2",
+    "user":"ubuntu",
+    "private_key":"/home/ec2-user/.ssh/id_rsa",
+    "applications":[{
+            "name":"StarAPI Auth Server",
+            "process_name":"star-auth-1.0.war"
+    },{
+            "name":"StarAPI Notifications Service",
+            "process_name":"star-notifications-service-1.0.war"
+    },{
+            "name":"StarAPI OOBA Service",
+            "process_name":"star-ooba-service-1.0.war"
+    },{
+            "name":"StarAPI Authentication Settings Service",
+            "process_name":"star-authentication-setting-service-1.0.war"
+    },{
+            "name":"StarAPI BOSS Bulk Payments Service",
+            "process_name":"boss-bulk-payment-service-cas-1.0.jar"
+    }]
+},{
+    "host":"172.16.12.8",
+    "name":"Tomcat BOSS - Server 1",
+    "user":"ubuntu",
+    "private_key":"/home/ec2-user/.ssh/id_rsa",
+    "applications":[{
+            "name":"BOSS Server",
+            "process_name":"catalina.home=/opt/tomcat_boss"
+    },{
+            "name":"CAS Server",
+            "process_name":"catalina.home=/opt/tomcat_sso"
+    },{
+            "name":"FXWEB Server",
+            "process_name":"catalina.home=/opt/tomcat_fxweb"
+    }]
+},{
+    "host":"172.16.13.239",
+    "name":"Tomcat BOSS - Server 2",
+    "user":"ubuntu",
+    "private_key":"/home/ec2-user/.ssh/id_rsa",
+    "applications":[{
+            "name":"BOSS Server",
+            "process_name":"catalina.home=/opt/tomcat_boss"
+    },{
+            "name":"CAS Server",
+            "process_name":"catalina.home=/opt/tomcat_sso"
+    },{
+            "name":"FXWEB Server",
+            "process_name":"catalina.home=/opt/tomcat_fxweb"
+    }]
+},{
+    "host":"172.16.12.121",
+    "name":"Tomcat FXOFFICE - Server 1",
+    "user":"ubuntu",
+    "private_key":"/home/ec2-user/.ssh/id_rsa",
+    "applications":[{
+            "name":"FXOffice Server",
+            "process_name":"catalina.home=/opt/tomcat_fxoffice"
+    }]
+},{
+    "host":"172.16.13.37",
+    "name":"Tomcat FXOFFICE - Server 2",
+    "user":"ubuntu",
+    "private_key":"/home/ec2-user/.ssh/id_rsa",
+    "applications":[{
+            "name":"FXOffice Server",
+            "process_name":"catalina.home=/opt/tomcat_fxoffice"
+    }]
+},{
+    "host":"172.16.10.43",
+    "name":"Keycloak Server",
+    "user":"ubuntu",
+    "private_key":"/home/ec2-user/.ssh/id_rsa",
+    "applications":[{
+            "name":"Keycloak Instance",
+            "process_name":"jboss.server.base.dir=/opt/keycloak-10.0.0/standalone"
+    }]
+},{
+    "host":"172.16.13.129",
+    "name":"Engines",
+    "user":"ubuntu",
+    "private_key":"/home/ec2-user/.ssh/id_rsa",
+    "applications":[{
+            "name":"DispatchEngine",
+            "process_name":"com.swapstech.fxstar.workflow.service.DispatchEngine"
+    },{
+            "name":"SchedulerEngine",
+            "process_name":"com.swapstech.fxstar.workflow.service.SchedulerEngine"
+    },{
+            "name":"WorkflowEngine",
+            "process_name":"com.swapstech.fxstar.workflow.service.WorkflowEngine",
+            "additional_info":"Instance=1"
+    },{
+            "name":"WorkflowEngine_2",
+            "process_name":"com.swapstech.fxstar.workflow.service.WorkflowEngine",
+            "additional_info":"Instance=2"
+    },{
+            "name":"WorkflowEngine_3",
+            "process_name":"com.swapstech.fxstar.workflow.service.WorkflowEngine",
+            "additional_info":"Instance=3"
+    },{
+            "name":"CIEngine",
+            "process_name":"com.swapstech.fxstar.ci.engine.CIEngine"
+    },{
+            "name":"SMSEngine",
+            "process_name":"com.swapstech.fxstar.notification.sms.service.SMSEngine"
+    },{
+            "name":"EmailEngine",
+            "process_name":"com.swapstech.fxstar.notification.email.service.EmailEngine"
+    },{
+            "name":"ReutersWebSocketEngine",
+            "process_name":"com.swapstech.fxstar.marketdata.reuters.websocket.service.ReutersWebSocketEngine"
+    },{
+            "name":"JobScheduler",
+            "process_name":"com.swapstech.boss.common.util.JobScheduler"
+    }]
+},{
+    "host":"172.16.12.80",
+    "name":"Mongo Server 1",
+    "user":"ubuntu",
+    "private_key":"/home/ec2-user/.ssh/id_rsa",
+    "applications":[{
+            "name":"Mongo DB",
+            "process_name":"/usr/bin/mongod --config /etc/mongod.conf"
+    }]
+},{
+    "host":"172.16.13.118",
+    "name":"Mongo Server 2",
+    "user":"ubuntu",
+    "private_key":"/home/ec2-user/.ssh/id_rsa",
+    "applications":[{
+            "name":"Mongo DB",
+            "process_name":"/usr/bin/mongod --config /etc/mongod.conf"
+    }]
+},{
+    "host":"172.16.10.249",
+    "name":"RabbitMQ Server 1",
+    "user":"ubuntu",
+    "private_key":"/home/ec2-user/.ssh/id_rsa",
+    "applications":[{
+            "name":"RabbitMQ",
+            "process_name":"/usr/lib/erlang/erts-7.3/bin/beam"
+    },{
+            "name":"T360FixEngine",
+            "process_name":"com.swapstech.fxstar.etrading.service.t360.T360FixEngine"
+    }]
+},{
+    "host":"172.16.13.13",
+    "name":"RabbitMQ Server 2",
+    "user":"ubuntu",
+    "private_key":"/home/ec2-user/.ssh/id_rsa",
+    "applications":[{
+            "name":"RabbitMQ",
+            "process_name":"/usr/lib/erlang/erts-7.3/bin/beam"
+    }]
+}]

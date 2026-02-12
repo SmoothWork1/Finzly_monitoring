@@ -1,0 +1,115 @@
+#sls deploy --config ./serverless_fxstar.yml --stage fcb
+#sls remove --config ./serverless_fxstar.yml --stage fcb
+service: exception-monitoring-service
+useDotenv: true
+custom:    
+  STAGE: ${opt:stage}
+  LOG_LEVEL: ${env:LOG_LEVEL}
+  REGION: ${env:REGION}
+  ACCOUNT_ID: "#{AWS::AccountId}"
+  DEPLOYMENT_BUCKET: ${env:DEPLOYMENT_BUCKET}
+  PLATFORM: ${env:PLATFORM}
+  MONITORING_SERVICE_URL: ${env:MONITORING_SERVICE_URL}
+  API_KEY: ${env:API_KEY}
+  ALARM_SNS_ARN: ${env:ALARM_SNS_ARN}
+  LOGGROUP_BOSS_TOMCAT: ${env:LOGGROUP_BOSS_TOMCAT}
+  LOGGROUP_ENGINES: ${env:LOGGROUP_ENGINES }
+  LOGGROUP_FX_TOMCAT: ${env:LOGGROUP_FX_TOMCAT}
+  LOGGROUP_FXRETAIL_TOMCAT: ${env:LOGGROUP_FXRETAIL_TOMCAT}
+  LOGGROUP_STARAPI_TOMCAT: ${env:LOGGROUP_STARAPI_TOMCAT}
+  profiles:
+    ffc: ffc
+    arv: arv
+    fcb: fcb
+    fnb: fnb
+    fhb: fhb
+    pwb: pwb
+    ppb: ppb
+    manu: manu
+    bmo: bmo
+    snv: snv
+    uqa: uqa
+    wab: wab
+    inb: inb
+plugins:
+  - serverless-latest-layer-version
+  - serverless-deployment-bucket  
+
+provider:
+  name: aws
+  profile: ${self:custom.profiles.${self:custom.STAGE}}
+  runtime: nodejs14.x
+  region: ${self:custom.REGION}
+  deploymentBucket:
+    name: ${self:custom.DEPLOYMENT_BUCKET}
+    serverSideEncryption: AES256
+  iam:
+    role:
+      statements:      
+        - Effect: Allow
+          Action:
+            - ssm:GetParameter
+            - ssm:GetParameters
+            - logs:DescribeSubscriptionFilters
+          Resource: "*" # arn:aws:ssm:${self:custom.REGION}::parameter/tooling/*    
+
+  environment:
+    STAGE: ${self:custom.STAGE}
+    LOG_LEVEL: ${self:custom.LOG_LEVEL}
+    REGION: ${self:custom.REGION}
+    PLATFORM: ${self:custom.PLATFORM}
+    MONITORING_SERVICE_URL: ${self:custom.MONITORING_SERVICE_URL}
+    API_KEY: ${self:custom.API_KEY}
+    ALARM_SNS_ARN: ${self:custom.ALARM_SNS_ARN}
+    LOGGROUP_BOSS_TOMCAT: ${self:custom.LOGGROUP_BOSS_TOMCAT}
+    LOGGROUP_ENGINES: ${self:custom.LOGGROUP_ENGINES}
+    LOGGROUP_FX_TOMCAT: ${self:custom.LOGGROUP_FX_TOMCAT}
+    LOGGROUP_FXRETAIL_TOMCAT: ${self:custom.LOGGROUP_FXRETAIL_TOMCAT}
+    LOGGROUP_STARAPI_TOMCAT: ${self:custom.LOGGROUP_STARAPI_TOMCAT}
+functions:
+  oom-cloud-watch-events:
+    handler: outofmemory_monitoring.logcheck
+    timeout: 600   
+    events:
+      - cloudwatchLog:
+          logGroup: ${self:custom.LOGGROUP_BOSS_TOMCAT}
+          filter: 'java.lang.OutOfMemoryError'
+      - cloudwatchLog:
+          logGroup: ${self:custom.LOGGROUP_ENGINES}
+          filter: 'java.lang.OutOfMemoryError'
+      - cloudwatchLog:
+          logGroup: ${self:custom.LOGGROUP_FX_TOMCAT}
+          filter: 'java.lang.OutOfMemoryError'
+      - cloudwatchLog:
+          logGroup: ${self:custom.LOGGROUP_FXRETAIL_TOMCAT}
+          filter: 'java.lang.OutOfMemoryError'
+      - cloudwatchLog:
+          logGroup: ${self:custom.LOGGROUP_STARAPI_TOMCAT}
+          filter: 'java.lang.OutOfMemoryError'
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:#{AWS::AccountId}:layer:common_node_modules:latest
+      - arn:aws:lambda:${self:custom.REGION}:#{AWS::AccountId}:layer:shared_modules:latest 
+  runtime-exception-events:
+    handler: runtime_exception.logcheck
+    timeout: 600   
+    events:
+      - cloudwatchLog:
+          logGroup: ${self:custom.LOGGROUP_BOSS_TOMCAT}
+          filter: 'NullPointerException'
+      #- cloudwatchLog:
+      #    logGroup: ${self:custom.LOGGROUP_BOSS_TOMCAT}
+      #    filter: '[(message="*OutOfMemoryError*") || (message="*Token validation skipped*")]'
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:#{AWS::AccountId}:layer:common_node_modules:latest
+      - arn:aws:lambda:${self:custom.REGION}:#{AWS::AccountId}:layer:shared_modules:latest
+
+  alarm-dispatcher:
+    handler: alarm-dispatcher.dispatch
+    timeout: 60
+    events:
+      - sns:
+          arn: ${self:custom.ALARM_SNS_ARN}
+          topicName: cloudwatch-alarm-monitoring-topic
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:#{AWS::AccountId}:layer:common_node_modules:latest
+      - arn:aws:lambda:${self:custom.REGION}:#{AWS::AccountId}:layer:shared_modules:latest

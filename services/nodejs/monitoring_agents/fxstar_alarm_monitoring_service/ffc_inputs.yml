@@ -1,0 +1,26 @@
+cloudwatch_oom_events:
+    - cloudwatchLog:
+        logGroup: ffc-prod-boss-tomcat
+        filter: 'java.lang.OutOfMemoryError'
+    - cloudwatchLog:
+        logGroup: ffc-prod-engines-logs
+        filter: 'java.lang.OutOfMemoryError'
+    - cloudwatchLog:
+        logGroup: ffc-prod-fx-tomcat
+        filter: 'java.lang.OutOfMemoryError'
+    - cloudwatchLog:
+        logGroup: ffc-prod-star-api
+        filter: 'java.lang.OutOfMemoryError'
+cloudwatch_npe_events:
+    - cloudwatchLog:
+        logGroup: ffc-prod-boss-tomcat
+        filter: 'java.lang.NullPointerException'
+    - cloudwatchLog:
+        logGroup: ffc-prod-engines-logs
+        filter: 'java.lang.NullPointerException'
+    - cloudwatchLog:
+        logGroup: ffc-prod-fx-tomcat
+        filter: 'java.lang.NullPointerException'
+    - cloudwatchLog:
+        logGroup: ffc-prod-star-api
+        filter: 'java.lang.NullPointerException'

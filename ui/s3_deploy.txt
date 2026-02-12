@@ -1,0 +1,8 @@
+1. cd galaxy-serverless/ui/monitoring-service
+2. npm install
+3. cd security
+4. sls deploy --stage dev
+5. Update  ui/monitoring-service/src/config/httpRoutes.js for correct API endpoint. You will have to get the endpoint from
+6. cd ../../
+7. npm install (inside the ui folder)
+8. node deployS3Web.js

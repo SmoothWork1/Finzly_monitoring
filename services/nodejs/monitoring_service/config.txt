@@ -1,0 +1,28 @@
+monitoring_service
+----------------------
+1. Steps to deploy
+   a. Update resources/scripts/setupVariables.json 
+   b. Run ./runMonitoringSetup.sh --stage dev --region us-east-2 --ui-bucket monitoring.finzly.net 
+   c. Capture cognito clientId, userpool, identitypool id etc from console system out
+   d. Update services/nodejs/monitoring_service/env.dev file for cognito client id
+   e. Update ui/monitoring_service/env.dev file for userpool and identity pool information
+   f. Run ./deployMonitoring.sh
+   
+1. Define following in env properties file
+  cognito_client  - Make sure to copy the cognito client id
+  TEMPLATE_BUCKET - Email templates bucket
+  DOMAIN_VARIABLE - R53 URL for notification apis.
+  SENDER_EMAIL - From email ID
+
+2. Make sure following tables are created under galaxy_monitoring schema
+  monitoring
+  user
+
+3. Define following db properties in parameter store
+/config/bankos/global_{env}/bankos.tenant.finzly.db.host
+/config/bankos/global_{env}/bankos.tenant.finzly.db.port
+/config/bankos/global_{env}/bankos.tenant.finzly.db.username
+/config/bankos/global_{env}/bankos.tenant.finzly.db.password
+
+4. TODO: Add SMTP information to cognito user pool
+

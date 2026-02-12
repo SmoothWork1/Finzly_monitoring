@@ -1,0 +1,26 @@
+cloudwatch_oom_events:
+    - cloudwatchLog:
+        logGroup: WAB-PROD-BOSS-TOMCAT-LOGS
+        filter: 'java.lang.OutOfMemoryError'
+    - cloudwatchLog:
+        logGroup: WAB-PROD-ENGINE-LOGS
+        filter: 'java.lang.OutOfMemoryError'
+    - cloudwatchLog:
+        logGroup: WAB-PROD-FX-TOMCAT-LOGS
+        filter: 'java.lang.OutOfMemoryError'
+    - cloudwatchLog:
+        logGroup: WAB-PROD-STARAPI-LOGS
+        filter: 'java.lang.OutOfMemoryError'
+cloudwatch_npe_events:
+    - cloudwatchLog:
+        logGroup: WAB-PROD-BOSS-TOMCAT-LOGS
+        filter: 'java.lang.NullPointerException'
+    - cloudwatchLog:
+        logGroup: WAB-PROD-ENGINE-LOGS
+        filter: 'java.lang.NullPointerException'
+    - cloudwatchLog:
+        logGroup: WAB-PROD-FX-TOMCAT-LOGS
+        filter: 'java.lang.NullPointerException'
+    - cloudwatchLog:
+        logGroup: WAB-PROD-STARAPI-LOGS
+        filter: 'java.lang.NullPointerException'

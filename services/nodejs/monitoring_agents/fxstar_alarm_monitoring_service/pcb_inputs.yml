@@ -1,0 +1,26 @@
+cloudwatch_oom_events:
+    - cloudwatchLog:
+        logGroup: pcb-prod-boss-tomcat
+        filter: 'java.lang.OutOfMemoryError'
+    - cloudwatchLog:
+        logGroup: pcb-prod-engines-logs
+        filter: 'java.lang.OutOfMemoryError'
+    - cloudwatchLog:
+        logGroup: pcb-prod-fx-tomcat
+        filter: 'java.lang.OutOfMemoryError'
+    - cloudwatchLog:
+        logGroup: pcb-prod-star-api
+        filter: 'java.lang.OutOfMemoryError'
+cloudwatch_npe_events:
+    - cloudwatchLog:
+        logGroup: pcb-prod-boss-tomcat
+        filter: 'java.lang.NullPointerException'
+    - cloudwatchLog:
+        logGroup: pcb-prod-engines-logs
+        filter: 'java.lang.NullPointerException'
+    - cloudwatchLog:
+        logGroup: pcb-prod-fx-tomcat
+        filter: 'java.lang.NullPointerException'
+    - cloudwatchLog:
+        logGroup: pcb-prod-star-api
+        filter: 'java.lang.NullPointerException'

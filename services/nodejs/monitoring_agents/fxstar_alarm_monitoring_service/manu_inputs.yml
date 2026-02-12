@@ -1,0 +1,26 @@
+cloudwatch_oom_events:
+    - cloudwatchLog:
+        logGroup: manu-prod-boss-tomcat
+        filter: 'java.lang.OutOfMemoryError'
+    - cloudwatchLog:
+        logGroup: ENGINES_LOG
+        filter: 'java.lang.OutOfMemoryError'
+    - cloudwatchLog:
+        logGroup: manu-prod-fx-tomcat
+        filter: 'java.lang.OutOfMemoryError'
+    - cloudwatchLog:
+        logGroup: manu-prod-api-tomcat
+        filter: 'java.lang.OutOfMemoryError'
+cloudwatch_npe_events:
+    - cloudwatchLog:
+        logGroup: manu-prod-boss-tomcat
+        filter: 'java.lang.NullPointerException'
+    - cloudwatchLog:
+        logGroup: ENGINES_LOG
+        filter: 'java.lang.NullPointerException'
+    - cloudwatchLog:
+        logGroup: manu-prod-fx-tomcat
+        filter: 'java.lang.NullPointerException'
+    - cloudwatchLog:
+        logGroup: manu-prod-api-tomcat
+        filter: 'java.lang.NullPointerException'

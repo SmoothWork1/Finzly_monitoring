@@ -1,0 +1,43 @@
+const responseHandler = require("/opt/modules/common/response");
+const BaseHandler = require("/opt/modules/common/basehandler");
+const awsmanager = require('/opt/modules/common/awsmanager');
+const helper = require('./helper/helper.js');
+const { getMonitoringUserByID, unflagEvent } = require("./helper/sql-monitoring.js");
+const { STAGE } = process.env;
+
+class Unflag_Event extends BaseHandler {
+    constructor() {
+        super();
+    }
+
+    async process(event, context, callback) {
+        try {
+			let flagged_id = event.pathParameters.flaggedid;
+            const awsManager = new awsmanager();
+            const dbHelper = await helper.create_db_connection(STAGE, this.tenant_name, awsManager);
+
+            const user_record = await getMonitoringUserByID(dbHelper, this.user_id)
+            if(user_record.type === 'Other User' && (this.tenant_name != user_record.tenant_id)) {
+                return responseHandler.sendUnauthorizedResponse({message: 'User is not unauthorized.'});
+            }
+
+            let flagged = await unflagEvent(dbHelper, flagged_id);
+            dbHelper.conn.end();
+            if (flagged) {
+                let resp = {
+                    message: "Unflagged event successfully"
+                };
+                return responseHandler.sendSuccessResponse(resp);
+            } else {
+                return responseHandler.sendBadReqResponse({message: 'Event could not be unflagged.'});
+            }
+        } catch(e) {
+            this.log.error("Unflag event error: ", e);
+            return responseHandler.sendBadReqResponse({message: 'Could not unflag event.'});
+        }
+    }
+}
+
+exports.unflag_event = async(event, context, callback) => {
+    return await new Unflag_Event().handler(event, context, callback);
+};

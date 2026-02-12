@@ -1,0 +1,1522 @@
+service: monitoring-service-manager
+useDotenv: true
+frameworkVersion: '>=4.0.0 <5.0.0'
+
+custom:
+  # customDomain:
+  #   domainName: '${env:DOMAIN_VARIABLE}'
+  #   basePath: 'monitoring'
+  #   stage: ${opt:stage}
+  #   createRoute53Record: true
+
+  STAGE: ${opt:stage}
+  REGION: ${env:REGION}
+  DB_TENANT: ${env:DB_TENANT}
+  cognito_client: ${env:cognito_client}
+  NOTIFICATION_API_URL: ${env:NOTIFICATION_API_URL}
+  ACCOUNT_ID: ${aws:accountId}
+  LOG_LEVEL: ${env:LOG_LEVEL}
+  VPC_SECURITY_GROUP: ${env:VPC_SECURITY_GROUP}
+  VPC_SUBNET: ${env:VPC_SUBNET}
+  DEPLOYMENT_BUCKET: ${env:DEPLOYMENT_BUCKET}
+  MONITORING_QUEUE_NAME: ${env:MONITORING_QUEUE_NAME}
+  OUTLOOK_USER: ${env:OUTLOOK_USER}
+  OUTLOOK_TENANTID: ${env:OUTLOOK_TENANTID}
+  OUTLOOK_CLIENTID: ${env:OUTLOOK_CLIENTID}
+  OUTLOOK_SECRET: ${env:OUTLOOK_SECRET}
+  SCHEDULERS_FUNCTION_SEARCH_STRING: ${env:SCHEDULERS_FUNCTION_SEARCH_STRING}
+  CROSSACCOUNT_ROLE: ${env:CROSSACCOUNT_ROLE}
+  CROSSACCOUNT_ID: ${env:CROSSACCOUNT_ID}
+
+  profiles:
+    tooling: tooling
+    dev: dev
+    test: test
+    uat: uat
+    preprod: preprod
+    prod: prod
+plugins:
+  - serverless-latest-layer-version
+  - serverless-deployment-bucket
+  # - serverless-domain-manager
+  # - serverless-plugin-common-excludes
+  #- serverless-plugin-include-dependencies
+# package:
+#  patterns:
+#    - '!security/**'
+provider:
+  name: aws
+  runtime: nodejs16.x
+  region: ${self:custom.REGION}
+  #profile: ${self:custom.profiles.${self:custom.STAGE}}
+  websocketsApiName: monitoring-service-websocket
+  websocketsApiRouteSelectionExpression: $request.body.route
+  websocketsDescription: Monitoring Service Websockets
+  deploymentBucket:
+    name: ${self:custom.DEPLOYMENT_BUCKET}
+    serverSideEncryption: AES256
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - ssm:GetParameter
+            - ssm:GetParameters
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - sqs:SendMessage
+            - sqs:ReceiveMessage
+            - sqs:DeleteMessage
+            - sqs:GetQueueUrl
+          Resource:
+            Fn::GetAtt:
+              - NotificationQueue
+              - Arn
+        - Effect: Allow
+          Action:
+            - cognito-identity:GetId
+            - cognito-identity:GetCredentialsForIdentity
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - lambda:InvokeFunction
+            - lambda:InvokeAsync
+            - lambda:Invoke
+            - lambda:ListFunctions
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - events:ListRules
+            - events:ListRuleNamesByTarget
+            - events:PutRule
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - execute-api:Invoke
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - sts:AssumeRole
+          Resource: arn:aws:iam::${self:custom.CROSSACCOUNT_ID}:role/${self:custom.CROSSACCOUNT_ROLE}
+        - Effect: Allow
+          Action:
+            - cognito-idp:SignUp
+            - cognito-idp:AdminCreateUser
+          Resource: "*"
+  environment:
+    STAGE: ${self:custom.STAGE}
+    LOG_LEVEL: ${self:custom.LOG_LEVEL}
+    SQS_URL: { Ref: NotificationQueue }
+    cognito_client: ${self:custom.cognito_client}
+    DB_TENANT: ${self:custom.DB_TENANT}
+    NOTIFICATION_API_URL: ${self:custom.NOTIFICATION_API_URL}
+    WEBSOCKET_URL: { Ref: WebsocketsApi }
+    REGION: ${self:custom.REGION}
+    OUTLOOK_USER: ${self:custom.OUTLOOK_USER}
+    OUTLOOK_TENANTID: ${self:custom.OUTLOOK_TENANTID}
+    OUTLOOK_CLIENTID: ${self:custom.OUTLOOK_CLIENTID}
+    OUTLOOK_SECRET: ${self:custom.OUTLOOK_SECRET}
+    SCHEDULERS_FUNCTION_SEARCH_STRING: ${self:custom.SCHEDULERS_FUNCTION_SEARCH_STRING}
+    CROSSACCOUNT_ROLE: ${self:custom.CROSSACCOUNT_ROLE}
+    CROSSACCOUNT_ID: ${self:custom.CROSSACCOUNT_ID}
+functions:
+  #daily-reset:
+  #  handler: daily-reset.daily_reset
+  #  vpc:
+  #    securityGroupIds:
+  #      - ${self:custom.VPC_SECURITY_GROUP}
+  #    subnetIds:
+  #      - ${self:custom.VPC_SUBNET}
+  #  events:
+  #    - schedule:
+  #       name: monitoring-reset-schedule
+  #       description: ""
+  #       rate: cron(0 4 * * ? *)
+  #       enabled: true
+  #  layers:
+  #    - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+  #    - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+      
+  websocket-connect:
+    handler: connectWebsocket.handler
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - websocket:
+          route: initiate
+          routeResponseSelectionExpression: $default
+          # authorizer:
+          #   arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+          #   identitySource:
+          #     - 'route.request.header.Auth'
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  websocket-disconnect:
+    handler: disconnectWebsocket.handler
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - websocket:
+          route: cease
+          routeResponseSelectionExpression: $default
+          # authorizer:
+          #   arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+          #   identitySource:
+          #     - 'route.request.header.Auth'
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  websocket-events-handler:
+    handler: eventsWebsocket.handler
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - websocket:
+          route: events
+          routeResponseSelectionExpression: $default
+          # authorizer:
+          #   arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+          #   identitySource:
+          #     - 'route.request.header.Auth'
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  admin-onboarding:
+    handler: admin-onboarding.admin_onboarding
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: post
+          path: /register
+          cors: true
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  admin-login:
+    handler: admin-login.admin_login
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: post
+          path: /login
+          cors: true 
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  get-admin-cognito-info:
+    handler: get-admin-cognito-info.get_admin_cognito_info
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: get
+          path: /profile
+          cors: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  forgot-password:
+    handler: forgot-password.forgot_password
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: put
+          path: /forgot
+          cors: true
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:#{AWS::AccountId}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:#{AWS::AccountId}:layer:shared_modules_${self:custom.STAGE}:latest
+  
+  confirm-forgot-password:
+    handler: confirm-forgot-password.confirm_forgot_password
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: put
+          path: /confirm_forgot
+          cors: true
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:#{AWS::AccountId}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:#{AWS::AccountId}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  notification-queue-monitor:
+    handler: notification-queue-monitor.notification_queue_monitor
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - NotificationQueue
+              - Arn
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+  
+  get-monitoring-events:
+    handler: get-monitoring-events.get_monitoring_events
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: get
+          path: /get_monitoring_events/{type}/{page}/{filter}
+          cors: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  get-monitoring-event:
+    handler: get-monitoring-event.get_monitoring_event
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: get
+          path: /get_monitoring_event/{id}
+          cors: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  add-event-comment:
+    handler: add-event-comment.add_event_comment
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: post
+          path: /add_event_comment
+          cors: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  get-event-function-names:
+    handler: get-event-function-names.get_event_function_names
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: get
+          path: /get_event_function_names/{type}
+          cors: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  get-heartbeats:
+    handler: get-heartbeats.get_heartbeats
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: get
+          path: /heartbeats
+          cors: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  get-recent-events-by-type:
+    handler: get-recent-events-by-type.get_recent_events_by_type
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: get
+          path: /recent_event_type_count
+          cors: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  update-monitoring-event:
+    handler: update-monitoring-event.update_monitoring_event
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: put
+          path: /update_monitoring_event
+          cors: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  create-event-subscription:
+    handler: create-event-subscription.create_event_subscription
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: post
+          path: /event_subscription
+          cors: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  update-event-subscriptions:
+    handler: update-event-subscription.update_event_subscription
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: put
+          path: /event_subscription
+          cors: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  get-event-subscriptions:
+    handler: get-event-subscriptions.get_event_subscriptions
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: get
+          path: /event_subscriptions
+          cors: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  delete-event-subscriptions:
+    handler: delete-event-subscription.delete_event_subscription
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: delete
+          path: /event_subscription/{subscriptionid}
+          cors: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  flag-event:
+    handler: flag-event.flag_event
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: post
+          path: /flag_event
+          cors: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  update-event-flag:
+    handler: update-event-flag.update_event_flag
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: put
+          path: /update_event_flag
+          cors: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  get-flagged-events:
+    handler: get-flagged-events.get_flagged_events
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: get
+          path: /get_flagged_events
+          cors: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  unflag-event:
+    handler: unflag-event.unflag_event
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: delete
+          path: /unflag_event/{flaggedid}
+          cors: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  verify-admin:
+    handler: verify-admin.verify_admin
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: put
+          path: /verify_admin
+          cors: true
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:#{AWS::AccountId}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:#{AWS::AccountId}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  get-notifications:
+    handler: get-notifications.get_notifications
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: get
+          path: /get_notifications
+          cors: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  clear-notifications:
+    handler: clear-notifications.clear_notifications
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: put
+          path: /clear_notifications
+          cors: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  runtime-exceptions:
+    handler: runtime-exceptions.runtime_exceptions
+    timeout: 30
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:#{AWS::AccountId}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:#{AWS::AccountId}:layer:shared_modules_${self:custom.STAGE}:latest
+    events:
+      - http:
+            path: /exceptions
+            method: POST
+            cors:
+              origin: "*"
+              headers: "*"
+              allowCredentials: true
+
+  heartbeat_register:
+    handler: heartbeat.heartbeat
+    timeout: 30
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:#{AWS::AccountId}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:#{AWS::AccountId}:layer:shared_modules_${self:custom.STAGE}:latest
+    events:
+      - http:
+            path: /heartbeat
+            method: POST
+            cors:
+              origin: "*"
+              headers: "*"
+              allowCredentials: true
+
+  dashboard:
+    handler: dashboard.dashboard
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: get
+          path: /dashboard
+          cors: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  block-dashboard:
+    handler: block-dashboard.block_dashboard
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: get
+          path: /blocks
+          cors: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  create-user:
+    handler: create-user.create_user
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: post
+          path: /users
+          cors:
+            origin: "*"
+            headers: "*"
+            allowCredentials: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+  
+  update-user:
+    handler: update-user.update_user
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: put
+          path: /users
+          cors:
+            origin: "*"
+            headers: "*"
+            allowCredentials: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  get-users:
+    handler: get-users.get_users
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: get
+          path: /users
+          cors:
+            origin: "*"
+            headers: "*"
+            allowCredentials: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  get-managable-users:
+    handler: get-managable-users.get_managable_users
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: get
+          path: /managable_users
+          cors:
+            origin: "*"
+            headers: "*"
+            allowCredentials: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+  
+  remove-user:
+    handler: remove-user.remove_user
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: delete
+          path: /users
+          cors:
+            origin: "*"
+            headers: "*"
+            allowCredentials: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  assign-monitoring-event:
+    handler: assign-monitoring-event.assign_monitoring_event
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: put
+          path: /assign_monitoring_event
+          cors:
+            origin: "*"
+            headers: "*"
+            allowCredentials: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  notification-viewed:
+    handler: notification-viewed.notification_viewed
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: post
+          path: /notification_viewed
+          cors:
+            origin: "*"
+            headers: "*"
+            allowCredentials: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  application-health:
+    handler: application-health.application_health
+    timeout: 30
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:#{AWS::AccountId}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:#{AWS::AccountId}:layer:shared_modules_${self:custom.STAGE}:latest
+    events:
+      - http:
+            path: /health
+            method: POST
+            cors:
+              origin: "*"
+              headers: "*"
+              allowCredentials: true
+
+  production-issues:
+    handler: production-tickets.production_tickets
+    timeout: 30
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:#{AWS::AccountId}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:#{AWS::AccountId}:layer:shared_modules_${self:custom.STAGE}:latest
+    events:
+      - http:
+            path: /production_tickets
+            method: POST
+            cors:
+              origin: "*"
+              headers: "*"
+              allowCredentials: true
+
+  outlook-scanner:
+    handler: outlook_listener.vendor_notifications
+    timeout: 600
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - schedule:
+          name: outlook_listener-schedule
+          description: ""
+          rate:
+            - cron(0,15,30,45 * ? * MON-FRI *) 
+          enabled: true
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:#{AWS::AccountId}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:#{AWS::AccountId}:layer:shared_modules_${self:custom.STAGE}:latest
+      
+  get-queries-by-lambda:
+    handler: get-monitoring-agent-queries-by-lambda.get_monitoring_agent_queries_by_lambda
+    timeout: 600
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: get
+          path: /get-monitoring-agent-queries-by-lambda/{functionName}
+          cors: true
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:#{AWS::AccountId}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:#{AWS::AccountId}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  get-queries-lambda:
+    handler: get-monitoring-agents-lambda.get_monitoring_agents_lambda
+    timeout: 600
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: get
+          path: /get-monitoring-agents-lambda
+          cors: true
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:#{AWS::AccountId}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:#{AWS::AccountId}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  get-func-by-filter:
+    handler: get-function-by-filter.get_function_by_filter
+    timeout: 600
+    environment:
+      SCHEDULERS_FUNCTION_SEARCH_STRING: ${self:custom.SCHEDULERS_FUNCTION_SEARCH_STRING}
+      CROSSACCOUNT_ROLE: ${self:custom.CROSSACCOUNT_ROLE}
+      CROSSACCOUNT_ID: ${self:custom.CROSSACCOUNT_ID}
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: get
+          path: /get-function-by-filter
+          cors: true
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:#{AWS::AccountId}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:#{AWS::AccountId}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  get-func-schedules:
+    handler: get-function-schedules.get_function_schedules
+    timeout: 600
+    environment:
+      CROSSACCOUNT_ROLE: ${self:custom.CROSSACCOUNT_ROLE}
+      CROSSACCOUNT_ID: ${self:custom.CROSSACCOUNT_ID}
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: get
+          path: /get-function-schedules/{functionArn}
+          cors: true
+
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:#{AWS::AccountId}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:#{AWS::AccountId}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  update-func-schedule:
+    handler: update-function-schedule.update_function_schedule
+    timeout: 600
+    environment:
+      CROSSACCOUNT_ROLE: ${self:custom.CROSSACCOUNT_ROLE}
+      CROSSACCOUNT_ID: ${self:custom.CROSSACCOUNT_ID}
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: put
+          path: /update-function-schedule
+          cors: true
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:#{AWS::AccountId}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:#{AWS::AccountId}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  insert-agent-query:
+    handler: insert-agent-query.insert_agent_query
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: post
+          path: /agent_queries
+          cors: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  update-agent-query:
+    handler: update-agent-query.update_agent_query
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: put
+          path: /agent_queries
+          cors: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  get-agent-queries:
+    handler: get-agent-queries.get_agent_queries
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: get
+          path: /agent_queries/{lambda}
+          cors: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  remove-agent-query:
+    handler: remove-agent-query.remove_agent_query
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: delete
+          path: /agent_queries/{lambda}/{query}
+          cors: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+  
+  save-devops-request:
+    handler: save-devops-request.save_devops_request
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: post
+          path: /requests
+          cors: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  update-devops-request:
+    handler: update-devops-request.update_devops_request
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: put
+          path: /requests
+          cors: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  get-devops-requests:
+    handler: get-devops-requests.get_devops_requests
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: get
+          path: /requests
+          cors: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  remove-devops-request:
+    handler: remove-devops-request.remove_devops_request
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: delete
+          path: /requests/{requestid}
+          cors: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  approve-devops-request:
+    handler: approve-devops-request.approve_devops_request
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: put
+          path: /requests/approve/{requestid}
+          cors: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+  
+  reject-devops-request:
+    handler: reject-devops-request.reject_devops_request
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: put
+          path: /requests/reject/{requestid}
+          cors: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+  
+  complete-devops-request:
+    handler: complete-devops-request.complete_devops_request
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: put
+          path: /requests/complete/{requestid}
+          cors: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  get-events:
+    handler: get-events.get_events
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: get
+          path: /events/pages/{page}
+          cors:
+            origin: "*"
+            headers: "*"
+            allowCredentials: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  remove-event:
+    handler: remove-event.remove_event
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: delete
+          path: /events
+          cors:
+            origin: "*"
+            headers: "*"
+            allowCredentials: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  create-event:
+    handler: create-event.create_event
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: post
+          path: /events
+          cors:
+            origin: "*"
+            headers: "*"
+            allowCredentials: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  update-event:
+    handler: update-event.update_event
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: put
+          path: /events
+          cors:
+            origin: "*"
+            headers: "*"
+            allowCredentials: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  get-uptime-apps:
+    handler: get-uptime-apps.get_uptime_apps
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: get
+          path: /uptime/apps
+          cors:
+            origin: "*"
+            headers: "*"
+            allowCredentials: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  get-uptime-platform:
+    handler: get-uptime-platform.get_uptime_platform
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: get
+          path: /uptime/platform/{platformId}
+          cors:
+            origin: "*"
+            headers: "*"
+            allowCredentials: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  get-uptime-allapps:
+    handler: get-uptime-allapps.get_uptime_allapps
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: get
+          path: /uptime/allapps
+          cors:
+            origin: "*"
+            headers: "*"
+            allowCredentials: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+  get-uptime-total:
+    handler: get-uptime-total.get_uptime_total
+    # vpc:
+    #   securityGroupIds:
+    #     - ${self:custom.VPC_SECURITY_GROUP}
+    #   subnetIds:
+    #     - ${self:custom.VPC_SUBNET}
+    events:
+      - http:
+          method: get
+          path: /uptime/total/{appName}/{startingDate}/{lastDate}
+          cors:
+            origin: "*"
+            headers: "*"
+            allowCredentials: true
+          authorizer:
+            arn: arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:function:monitoring-security-manager-${self:custom.STAGE}-monitoring-authorizer
+            resultTtlInSeconds: 0
+            type: request
+            identitySource: method.request.header.Authorization
+    layers:
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:common_node_modules_${self:custom.STAGE}:latest
+      - arn:aws:lambda:${self:custom.REGION}:${self:custom.ACCOUNT_ID}:layer:shared_modules_${self:custom.STAGE}:latest
+
+resources:
+  Resources:
+    NotificationQueue:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: "monitoring_sqs_${self:custom.STAGE}"
+    GatewayResponseDefault4XX:
+       Type: 'AWS::ApiGateway::GatewayResponse'
+       Properties:
+         ResponseParameters:
+           gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+           gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+         ResponseType: DEFAULT_4XX
+         RestApiId:
+           Ref: 'ApiGatewayRestApi'
+    WebsocketsApi:
+      Type: "AWS::ApiGatewayV2::Api"
+      Properties:
+        Name: ${self:provider.websocketsApiName}
+        ProtocolType: WEBSOCKET
+        RouteSelectionExpression: ${self:provider.websocketsApiRouteSelectionExpression}
+        Description: ${self:provider.websocketsDescription}

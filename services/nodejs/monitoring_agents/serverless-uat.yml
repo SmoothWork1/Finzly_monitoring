@@ -1,0 +1,166 @@
+service: monitoring-agents
+useDotenv: true
+custom:
+  STAGE: ${opt:stage}
+  LOG_LEVEL: ${env:LOG_LEVEL}
+  REGION: ${env:REGION}
+  BUCKET: ${env:LISTENED_BUCKET}
+  LISTENED_BUCKET: "arn:aws:s3:::${env:LISTENED_BUCKET}"
+  MONITORING_SQS_NAME: ${env:MONITORING_SQS_NAME}
+  ACCOUNT_ID: "#{AWS::AccountId}"
+  VPC_SECURITY_GROUP: ${env:VPC_SECURITY_GROUP}
+  VPC_SUBNET: ${env:VPC_SUBNET}
+  DEPLOYMENT_BUCKET: ${env:DEPLOYMENT_BUCKET}
+  #CROSSACCOUNT_ROLE: ${env:CROSSACCOUNT_ROLE}
+  #CROSSACCOUNT_ID: ${env:CROSSACCOUNT_ID}
+  TIME_LAPSE: ${env:TIME_LAPSE}
+  DEVOPS_EMAIL: ${env:DEVOPS_EMAIL}
+  NOTIFICATION_API_URL: ${env:NOTIFICATION_API_URL}
+  MONITORING_SERVICE_URL: ${env:MONITORING_SERVICE_URL}
+  STUCK_ACH_PAYMENT_STATUS_LIST: ${env:STUCK_ACH_PAYMENT_STATUS_LIST}
+  STUCK_FEDWIRE_PAYMENT_STATUS_LIST: ${env:STUCK_FEDWIRE_PAYMENT_STATUS_LIST}
+  STUCK_ACH_TRANSACTION_STATUS_LIST: ${env:STUCK_ACH_TRANSACTION_STATUS_LIST}
+  STUCK_FEDWIRE_TRANSACTION_STATUS_LIST: ${env:STUCK_FEDWIRE_TRANSACTION_STATUS_LIST}
+  STUCK_RTP_PAYMENT_STATUS_LIST: ${env:STUCK_RTP_PAYMENT_STATUS_LIST}
+  FAILED_PAYMENT_STATUS_LIST: ${env:FAILED_PAYMENT_STATUS_LIST}
+  FAILED_ACH_TRANSACTION_STATUS_LIST: ${env:FAILED_ACH_TRANSACTION_STATUS_LIST}
+  FAILED_FEDWIRE_TRANSACTION_STATUS_LIST: ${env:FAILED_FEDWIRE_TRANSACTION_STATUS_LIST}
+  FAILED_RTP_TRANSACTION_STATUS_LIST: ${env:FAILED_RTP_TRANSACTION_STATUS_LIST}
+  FAILED_RTP_MESSAGE_STATUS_LIST: ${env:FAILED_RTP_MESSAGE_STATUS_LIST}
+  STUCK_NOTIFICATIONS_STATUS_LIST: ${env:STUCK_NOTIFICATIONS_STATUS_LIST}
+  KEYCLOAK_HEALTH_URL: ${env:KEYCLOAK_HEALTH_URL}
+
+  ALARM_SNS_ARN: ${env:ALARM_SNS_ARN}
+  API_KEY: ${env:API_KEY}
+  profiles:
+    tooling: tooling
+    dev: dev
+    test: test
+    uat: uat
+    prod: prod
+    poc: poc
+plugins:
+  - serverless-latest-layer-version
+  - serverless-deployment-bucket
+package:
+  excludeDevDependencies: true
+provider:
+  name: aws
+  #profile: ${self:custom.profiles.${self:custom.STAGE}}
+  runtime: nodejs16.x
+  region: ${self:custom.REGION}
+  deploymentBucket:
+    name: ${self:custom.DEPLOYMENT_BUCKET}
+    serverSideEncryption: AES256
+  iam:
+    role:
+      statements: 
+        - Effect: Allow
+          Action:
+            - s3:GetObject
+            - s3:PutObject
+            - s3:DeleteObject
+            - s3:ListBucket
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - ec2:DescribeNetworkInterfaces
+            - ec2:CreateNetworkInterface
+            - ec2:DeleteNetworkInterface
+            - ec2:DescribeInstances
+            - ec2:AttachNetworkInterface
+          Resource: "*"          
+        - Effect: Allow
+          Action:
+            - ssm:GetParameter
+            - ssm:GetParameters
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - sqs:SendMessage
+            - sqs:GetQueueUrl
+            - sqs:ListQueues
+            - sqs:getqueueattributes
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - kms:Decrypt
+            - kms:DescribeKey
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - ec2:DescribeVpnConnections
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - cloudwatch:GetMetricStatistics
+          Resource: "*"
+        #- Effect: Allow
+        #  Action:
+        #    - sts:AssumeRole
+        #  Resource: arn:aws:iam::${self:custom.CROSSACCOUNT_ID}:role/${self:custom.CROSSACCOUNT_ROLE}
+  environment:
+    STAGE: ${self:custom.STAGE}
+    LOG_LEVEL: ${self:custom.LOG_LEVEL}
+    ACCOUNT_ID: ${self:custom.ACCOUNT_ID}
+    LISTENED_BUCKET: ${self:custom.BUCKET}
+    MONITORING_SQS_NAME: ${self:custom.MONITORING_SQS_NAME}
+    REGION: ${self:custom.REGION}
+    TIME_LAPSE: ${self:custom.TIME_LAPSE}
+    STUCK_ACH_PAYMENT_STATUS_LIST: ${self:custom.STUCK_ACH_PAYMENT_STATUS_LIST}
+    STUCK_FEDWIRE_PAYMENT_STATUS_LIST: ${self:custom.STUCK_FEDWIRE_PAYMENT_STATUS_LIST}
+    STUCK_ACH_TRANSACTION_STATUS_LIST: ${self:custom.STUCK_ACH_TRANSACTION_STATUS_LIST}
+    STUCK_FEDWIRE_TRANSACTION_STATUS_LIST: ${self:custom.STUCK_FEDWIRE_TRANSACTION_STATUS_LIST}
+    FAILED_PAYMENT_STATUS_LIST: ${self:custom.FAILED_PAYMENT_STATUS_LIST}
+    FAILED_ACH_TRANSACTION_STATUS_LIST: ${self:custom.FAILED_ACH_TRANSACTION_STATUS_LIST}
+    FAILED_FEDWIRE_TRANSACTION_STATUS_LIST: ${self:custom.FAILED_FEDWIRE_TRANSACTION_STATUS_LIST}
+    FAILED_RTP_MESSAGE_STATUS_LIST: ${self:custom.FAILED_RTP_MESSAGE_STATUS_LIST}
+    STUCK_NOTIFICATIONS_STATUS_LIST: ${env:STUCK_NOTIFICATIONS_STATUS_LIST}
+    #CROSSACCOUNT_ROLE: ${self:custom.CROSSACCOUNT_ROLE}
+    #CROSSACCOUNT_ID: ${self:custom.CROSSACCOUNT_ID}
+    DEVOPS_EMAIL: ${self:custom.DEVOPS_EMAIL}
+    NOTIFICATION_API_URL: ${self:custom.NOTIFICATION_API_URL}
+    MONITORING_SERVICE_URL: ${self:custom.MONITORING_SERVICE_URL}
+    API_KEY: ${self:custom.API_KEY}
+    ALARM_SNS_ARN: ${self:custom.ALARM_SNS_ARN}
+    KEYCLOAK_HEALTH_URL: ${self:custom.KEYCLOAK_HEALTH_URL}
+functions:
+  uptime-simulator:
+      handler: uptime_simulator.scheduler
+      timeout: 600
+      vpc:
+        securityGroupIds:
+          - ${self:custom.VPC_SECURITY_GROUP}
+        subnetIds:
+          - ${self:custom.VPC_SUBNET}
+      events:
+        - schedule:
+            name: monitoring-uptime-simulator
+            description: "Monitor the login anamolies - Every 5 mins 24x5"
+            rate:
+              #- cron(0 13-01 ? * MON-FRI *)
+              - cron(*/5 * ? * * *)
+            enabled: true
+      layers:
+        - arn:aws:lambda:${self:custom.REGION}:#{AWS::AccountId}:layer:monit_common_${self:custom.STAGE}:latest
+        - arn:aws:lambda:${self:custom.REGION}:#{AWS::AccountId}:layer:monit_shared_${self:custom.STAGE}:latest
+
+  uptime-report-job:
+      handler: uptime_report_job.scheduler
+      timeout: 600
+      vpc:
+        securityGroupIds:
+          - ${self:custom.VPC_SECURITY_GROUP}
+        subnetIds:
+          - ${self:custom.VPC_SUBNET}
+      events:
+        - schedule:
+            name: monitoring-uptime-report-job
+            description: "Monitor the login anamolies - Every 5 mins 24x5"
+            rate:
+              #- cron(0 13-01 ? * MON-FRI *)
+              - cron(0 03 ? * MON-FRI *)
+            enabled: true
+      layers:
+        - arn:aws:lambda:${self:custom.REGION}:#{AWS::AccountId}:layer:monit_common_${self:custom.STAGE}:latest
+        - arn:aws:lambda:${self:custom.REGION}:#{AWS::AccountId}:layer:monit_shared_${self:custom.STAGE}:latest

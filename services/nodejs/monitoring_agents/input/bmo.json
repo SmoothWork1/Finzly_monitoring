@@ -1,0 +1,470 @@
+[{
+    "host":"10.16.13.182",
+    "name":"StarAPI-Server-1",
+    "user":"ubuntu",
+    "private_key":"/home/ubuntu/.ssh/id_rsa",
+    "applications":[{
+            "name":"StarAPI Registry",
+            "process_name":"star-registry-1.0.war"
+    },{
+            "name":"StarAPI Config Server",
+            "process_name":"star-config-1.0.war"
+    },{
+            "name":"StarAPI Auth Server",
+            "process_name":"star-auth-1.0.war"
+    },{
+            "name":"StarAPI Notifications Service",
+            "process_name":"star-notifications-service-1.0.war"
+    },{
+            "name":"StarAPI OOBA Service",
+            "process_name":"star-ooba-service-1.0.war"
+    },{
+            "name":"StarAPI Authentication Settings Service",
+            "process_name":"star-authentication-setting-service-1.0.war"
+    },{
+            "name":"StarAPI BOSS Bulk Payments Service",
+            "process_name":"boss-bulk-payment-service-1.0.jar"
+    },{
+            "name":"StarAPI  Compliance Service",
+            "process_name":"galaxy-compliance-service-1.0.jar"
+    },{
+            "name":"StarAPI Ofac Service",
+            "process_name":"star-ofac-service-1.0.war"
+    },{
+            "name":"StarAPI Downstream banking  Service",
+            "process_name":"downstream-banking-service-1.0.jar"
+    }]
+},{
+    "host":"10.16.13.246",
+    "name":"StarAPI-Server-2",
+    "user":"ubuntu",
+    "private_key":"/home/ubuntu/.ssh/id_rsa",
+    "applications":[{
+            "name":"StarAPI Auth Server",
+            "process_name":"star-auth-1.0.war"
+    },{
+            "name":"StarAPI Notifications Service",
+            "process_name":"star-notifications-service-1.0.war"
+    },{
+            "name":"StarAPI OOBA Service",
+            "process_name":"star-ooba-service-1.0.war"
+    },{
+            "name":"StarAPI Authentication Settings Service",
+            "process_name":"star-authentication-setting-service-1.0.war"
+    },{
+            "name":"StarAPI BOSS Bulk Payments Service",
+            "process_name":"boss-bulk-payment-service-1.0.jar"
+    },{
+            "name":"StarAPI  Compliance Service",
+            "process_name":"galaxy-compliance-service-1.0.jar"
+    },{
+            "name":"StarAPI Ofac Service",
+            "process_name":"star-ofac-service-1.0.war"
+    },{
+            "name":"StarAPI Downstream banking  Service",
+            "process_name":"downstream-banking-service-1.0.jar"
+    }]
+},{
+    "host":"10.16.13.190",
+    "name":"Tomcat BOSS - Server 1",
+    "user":"ubuntu",
+    "private_key":"/home/ubuntu/.ssh/id_rsa",
+    "applications":[{
+            "name":"BOSS Server",
+            "process_name":"catalina.home=/opt/tomcat_boss"
+    },{
+            "name":"FXWEB Server",
+            "process_name":"catalina.home=/opt/tomcat_fxweb"
+    }]
+},{
+    "host":"10.16.13.235",
+    "name":"Tomcat BOSS - Server 2",
+    "user":"ubuntu",
+    "private_key":"/home/ubuntu/.ssh/id_rsa",
+    "applications":[{
+            "name":"BOSS Server",
+            "process_name":"catalina.home=/opt/tomcat_boss"
+    },{
+            "name":"FXWEB Server",
+            "process_name":"catalina.home=/opt/tomcat_fxweb"
+    }]
+},{
+    "host":"10.16.13.160",
+    "name":"Tomcat FXOFFICE - Server 1",
+    "user":"ubuntu",
+    "private_key":"/home/ubuntu/.ssh/id_rsa",
+    "applications":[{
+            "name":"FXOffice Server",
+            "process_name":"catalina.home=/opt/tomcat_fxoffice"
+    },{
+            "name":"FXBranch Server",
+            "process_name":"catalina.home=/opt/tomcat_fxretail"
+    }]
+},{
+    "host":"10.16.13.218",
+    "name":"Tomcat FXOFFICE - Server 2",
+    "user":"ubuntu",
+    "private_key":"/home/ubuntu/.ssh/id_rsa",
+    "applications":[{
+            "name":"FXOffice Server",
+            "process_name":"catalina.home=/opt/tomcat_fxoffice"
+    },{
+            "name":"FXBranch Server",
+            "process_name":"catalina.home=/opt/tomcat_fxretail"
+    }]
+},{
+    "host":"10.16.13.45",
+    "name":"Keycloak Server",
+    "user":"ubuntu",
+    "private_key":"/home/ubuntu/.ssh/id_rsa",
+    "applications":[{
+            "name":"Keycloak Instance",
+            "process_name":"jboss.server.base.dir=/opt/keycloak-10.0.0/standalone"
+    }]
+},{
+    "host":"10.16.13.143",
+    "name":"Engines",
+    "user":"ubuntu",
+    "private_key":"/home/ubuntu/.ssh/id_rsa",
+    "applications":[{
+            "name":"DispatchEngine",
+            "process_name":"com.swapstech.fxstar.workflow.service.DispatchEngine"
+    },{
+            "name":"SchedulerEngine",
+            "process_name":"com.swapstech.fxstar.workflow.service.SchedulerEngine"
+    },{
+            "name":"WorkflowEngine",
+            "process_name":"com.swapstech.fxstar.workflow.service.WorkflowEngine",
+            "additional_info":"Instance=1"
+    },{
+            "name":"WorkflowEngine",
+            "process_name":"com.swapstech.fxstar.workflow.service.WorkflowEngine",
+            "additional_info":"Instance=3"
+    },{
+            "name":"SMSEngine",
+            "process_name":"com.swapstech.fxstar.notification.sms.service.SMSEngine"
+    },{
+            "name":"HazelCasteEngine",
+            "process_name":"com.swapstech.fxstar.etrading.cache.HzCacheEngine"
+    },{
+            "name":"EmailEngine",
+            "process_name":"com.swapstech.fxstar.notification.email.service.EmailEngine"
+    },{
+            "name":"ReutersWebSocketEngine",
+            "process_name":"com.swapstech.fxstar.marketdata.reuters.websocket.service.ReutersWebSocketEngine"
+    },{
+            "name":"BMOPaymentReportEngine",
+            "process_name":"com.swapstech.fxstar.report.payment.BMOPaymentReportEngine"
+    },{
+            "name":"BMOFIXEngine",
+            "process_name":"com.swapstech.fxstar.etrading.bmo.service.BMOQuoteAndTradeFixEngine"
+    },{
+            "name":"PaymentAdaptor Engine",
+            "process_name":"/home/ubuntu/engines/star-pricing-adaptor-service-1.0.jar"
+    },{
+            "name":"JobScheduler",
+            "process_name":"com.swapstech.boss.common.util.JobScheduler"
+    }]
+},{
+    "host":"10.16.13.161",
+    "name":"Mongo Server 1",
+    "user":"ubuntu",
+    "private_key":"/home/ubuntu/.ssh/id_rsa",
+    "applications":[{
+            "name":"Mongo DB",
+            "process_name":"/usr/bin/mongod --config /etc/mongod.conf"
+    }]
+},{
+    "host":"10.16.13.202",
+    "name":"Mongo Server 2",
+    "user":"ubuntu",
+    "private_key":"/home/ubuntu/.ssh/id_rsa",
+    "applications":[{
+            "name":"Mongo DB",
+            "process_name":"/usr/bin/mongod --config /etc/mongod.conf"
+    }]
+},{
+    "host":"10.16.13.149",
+    "name":"RabbitMQ Server 1",
+    "user":"ubuntu",
+    "private_key":"/home/ubuntu/.ssh/id_rsa",
+    "applications":[{
+            "name":"RabbitMQ",
+            "process_name":"/usr/lib/erlang/erts-7.3/bin/beam"
+    }]
+},{
+    "host":"10.16.13.204",
+    "name":"RabbitMQ Server 2",
+    "user":"ubuntu",
+    "private_key":"/home/ubuntu/.ssh/id_rsa",
+    "applications":[{
+            "name":"RabbitMQ",
+            "process_name":"/usr/lib/erlang/erts-7.3/bin/beam"
+    }]
+},{
+    "host":"10.16.14.44",
+    "name":"BSB-PROD-Server",
+    "user":"ubuntu",
+    "private_key":"/home/ubuntu/.ssh/id_rsa",
+    "applications":[{
+            "name":"BSB StarAPI Registry",
+            "process_name":"star-registry-1.0.war"
+    },{
+            "name":"BSB StarAPI Config Server",
+            "process_name":"star-config-1.0.war"
+    },{
+            "name":"BSB StarAPI Auth Server",
+            "process_name":"star-auth-1.0.war"
+    },{
+            "name":"BSB StarAPI Notifications Service",
+            "process_name":"star-notifications-service-1.0.war"
+    },{
+            "name":"BSB StarAPI OOBA Service",
+            "process_name":"star-ooba-service-1.0.war"
+    },{
+            "name":"BSB StarAPI Authentication Settings Service",
+            "process_name":"star-authentication-setting-service-1.0.war"
+    },{
+            "name":"BSB StarAPI BOSS Bulk Payments Service",
+            "process_name":"boss-bulk-payment-service-1.0.jar"
+    },{
+            "name":"BSB StarAPI  Compliance Service",
+            "process_name":"galaxy-compliance-service-1.0.jar"
+    },{
+            "name":"BSB StarAPI Ofac Service",
+            "process_name":"star-ofac-service-1.0.war"
+    },{
+            "name":"BSB StarAPI Downstream banking  Service",
+            "process_name":"downstream-banking-service-1.0.jar"
+    }]
+},{
+    "host":"10.16.14.44",
+    "name":"BSB-PROD-FX-BOSS",
+    "user":"ubuntu",
+    "private_key":"/home/ubuntu/.ssh/id_rsa",
+    "applications":[{
+            "name":"BSB BOSS Server",
+            "process_name":"catalina.home=/opt/tomcat_boss"
+    },{
+            "name":"BSB FXWEB Server",
+            "process_name":"catalina.home=/opt/tomcat_fxweb"
+    },{
+            "name":"BSB FXOffice Server",
+            "process_name":"catalina.home=/opt/tomcat_fxoffice"
+    },{
+            "name":"BSB FXBranch Server",
+            "process_name":"catalina.home=/opt/tomcat_fxretail"
+    },{
+            "name":"BSB DispatchEngine",
+            "process_name":"com.swapstech.fxstar.workflow.service.DispatchEngine"
+    },{
+            "name":"BSB SchedulerEngine",
+            "process_name":"com.swapstech.fxstar.workflow.service.SchedulerEngine"
+    },{
+            "name":"BSB WorkflowEngine",
+            "process_name":"com.swapstech.fxstar.workflow.service.WorkflowEngine",
+            "additional_info":"Instance=1"
+    },{
+            "name":"BSB WorkflowEngine",
+            "process_name":"com.swapstech.fxstar.workflow.service.WorkflowEngine",
+            "additional_info":"Instance=3"
+    },{
+            "name":"BSB SMSEngine",
+            "process_name":"com.swapstech.fxstar.notification.sms.service.SMSEngine"
+    },{
+            "name":"BSB HazelCasteEngine",
+            "process_name":"com.swapstech.fxstar.etrading.cache.HzCacheEngine"
+    },{
+            "name":"BSB EmailEngine",
+            "process_name":"com.swapstech.fxstar.notification.email.service.EmailEngine"
+    },{
+            "name":"BSB BMOCanadaFixEngine.sh",
+            "process_name":"com.swapstech.fxstar.etrading.bmo.service.BMOQuoteAndTradeFixEngine"
+    },{
+            "name":"BSB BMOFIXEngine",
+            "process_name":"com.swapstech.fxstar.etrading.bmo.service.BMOQuoteAndTradeFixEngine"
+    },{
+            "name":"BSB PaymentAdaptor Engine",
+            "process_name":"/home/ubuntu/engines/star-pricing-adaptor-service-1.0.jar"
+    },{
+            "name":"BSB JobScheduler",
+            "process_name":"com.swapstech.boss.common.util.JobScheduler"
+    },{
+            "name":"BSB Mongo DB",
+            "process_name":"/usr/bin/mongod --config /etc/mongod.conf"
+    },{
+            "name":"BSB RabbitMQ",
+            "process_name":"/usr/lib/erlang/erts-7.3/bin/beam"
+    }]
+},{
+    "host":"10.16.15.151",
+    "name":"MSB-PROD-SERVER",
+    "user":"ubuntu",
+    "private_key":"/home/ubuntu/.ssh/id_rsa",
+    "applications":[{
+            "name":"MSB StarAPI Registry",
+            "process_name":"star-registry-1.0.war"
+    },{
+            "name":"MSB StarAPI Config Server",
+            "process_name":"star-config-1.0.war"
+    },{
+            "name":"MSB StarAPI Auth Server",
+            "process_name":"star-auth-1.0.war"
+    },{
+            "name":"MSB StarAPI Notifications Service",
+            "process_name":"star-notifications-service-1.0.war"
+    },{
+            "name":"MSB StarAPI OOBA Service",
+            "process_name":"star-ooba-service-1.0.war"
+    },{
+            "name":"MSB StarAPI Authentication Settings Service",
+            "process_name":"star-authentication-setting-service-1.0.war"
+    },{
+            "name":"MSB StarAPI BOSS Bulk Payments Service",
+            "process_name":"boss-bulk-payment-service-1.0.jar"
+    },{
+            "name":"MSB StarAPI  Compliance Service",
+            "process_name":"galaxy-compliance-service-1.0.jar"
+    },{
+            "name":"MSB StarAPI Ofac Service",
+            "process_name":"star-ofac-service-1.0.war"
+    },{
+            "name":"MSB StarAPI Downstream banking  Service",
+            "process_name":"downstream-banking-service-1.0.jar"
+    },{
+            "name":"MSB BOSS Server",
+            "process_name":"catalina.home=/opt/tomcat_boss"
+    },{
+            "name":"MSB FXWEB Server",
+            "process_name":"catalina.home=/opt/tomcat_fxweb"
+    },{
+            "name":"MSB FXOffice Server",
+            "process_name":"catalina.home=/opt/tomcat_fxoffice"
+    },{
+            "name":"MSB FXBranch Server",
+            "process_name":"catalina.home=/opt/tomcat_fxretail"
+    },{
+            "name":"MSB DispatchEngine",
+            "process_name":"com.swapstech.fxstar.workflow.service.DispatchEngine"
+    },{
+            "name":"MSB SchedulerEngine",
+            "process_name":"com.swapstech.fxstar.workflow.service.SchedulerEngine"
+    },{
+            "name":"MSB WorkflowEngine",
+            "process_name":"com.swapstech.fxstar.workflow.service.WorkflowEngine",
+            "additional_info":"Instance=1"
+    },{
+            "name":"MSB SMSEngine",
+            "process_name":"com.swapstech.fxstar.notification.sms.service.SMSEngine"
+    },{
+            "name":"MSB HazelCasteEngine",
+            "process_name":"com.swapstech.fxstar.etrading.cache.HzCacheEngine"
+    },{
+            "name":"MSB EmailEngine",
+            "process_name":"com.swapstech.fxstar.notification.email.service.EmailEngine"
+    },{
+            "name":"MSB BMOCanadaFixEngine.sh",
+            "process_name":"com.swapstech.fxstar.etrading.bmo.service.BMOQuoteAndTradeFixEngine BMO_CANADA"
+    },{
+            "name":"MSB BMOFIXEngine",
+            "process_name":"com.swapstech.fxstar.etrading.bmo.service.BMOQuoteAndTradeFixEngine"
+    },{
+            "name":"MSB PaymentAdaptor Engine",
+            "process_name":"/home/ubuntu/engines/star-pricing-adaptor-service-1.0.jar"
+    },{
+            "name":"MSB JobScheduler",
+            "process_name":"com.swapstech.boss.common.util.JobScheduler"
+    },{
+            "name":"MSB Mongo DB",
+            "process_name":"/usr/bin/mongod --config /etc/mongod.conf"
+    },{
+            "name":"MSB RabbitMQ",
+            "process_name":"/usr/lib/erlang/erts-7.3/bin/beam"
+    }]
+},{
+    "host":"10.16.16.142",
+    "name":"TNB-PROD-Server",
+    "user":"ubuntu",
+    "private_key":"/home/ubuntu/.ssh/id_rsa",
+    "applications":[{
+            "name":"TNB StarAPI Registry",
+            "process_name":"star-registry-1.0.war"
+    },{
+            "name":"TNB StarAPI Config Server",
+            "process_name":"star-config-1.0.war"
+    },{
+            "name":"TNB StarAPI Auth Server",
+            "process_name":"star-auth-1.0.war"
+    },{
+            "name":"TNB StarAPI Notifications Service",
+            "process_name":"star-notifications-service-1.0.war"
+    },{
+            "name":"TNB StarAPI OOBA Service",
+            "process_name":"star-ooba-service-1.0.war"
+    },{
+            "name":"TNB StarAPI Authentication Settings Service",
+            "process_name":"star-authentication-setting-service-1.0.war"
+    },{
+            "name":"TNB StarAPI BOSS Bulk Payments Service",
+            "process_name":"boss-bulk-payment-service-1.0.jar"
+    },{
+            "name":"TNB StarAPI  Compliance Service",
+            "process_name":"galaxy-compliance-service-1.0.jar"
+    },{
+            "name":"TNB StarAPI Ofac Service",
+            "process_name":"star-ofac-service-1.0.war"
+    },{
+            "name":"TNB StarAPI Downstream banking  Service",
+            "process_name":"downstream-banking-service-1.0.jar"
+    },{
+            "name":"TNB BOSS Server",
+            "process_name":"catalina.home=/opt/tomcat_boss"
+    },{
+            "name":"TNB FXWEB Server",
+            "process_name":"catalina.home=/opt/tomcat_fxweb"
+    },{
+            "name":"TNB FXOffice Server",
+            "process_name":"catalina.home=/opt/tomcat_fxoffice"
+    },{
+            "name":"TNB FXBranch Server",
+            "process_name":"catalina.home=/opt/tomcat_fxretail"
+    },{
+            "name":"TNB DispatchEngine",
+            "process_name":"com.swapstech.fxstar.workflow.service.DispatchEngine"
+    },{
+            "name":"TNB SchedulerEngine",
+            "process_name":"com.swapstech.fxstar.workflow.service.SchedulerEngine"
+    },{
+            "name":"TNB WorkflowEngine",
+            "process_name":"com.swapstech.fxstar.workflow.service.WorkflowEngine",
+            "additional_info":"Instance=1"
+    },{
+            "name":"TNB SMSEngine",
+            "process_name":"com.swapstech.fxstar.notification.sms.service.SMSEngine"
+    },{
+            "name":"TNB HazelCasteEngine",
+            "process_name":"com.swapstech.fxstar.etrading.cache.HzCacheEngine"
+    },{
+            "name":"TNB EmailEngine",
+            "process_name":"com.swapstech.fxstar.notification.email.service.EmailEngine"
+    },{
+            "name":"TNB BMOCanadaFixEngine.sh",
+            "process_name":"com.swapstech.fxstar.etrading.bmo.service.BMOQuoteAndTradeFixEngine BMO_CANADA"
+    },{
+            "name":"TNB BMOFIXEngine",
+            "process_name":"com.swapstech.fxstar.etrading.bmo.service.BMOQuoteAndTradeFixEngine"
+    },{
+            "name":"TNB PaymentAdaptor Engine",
+            "process_name":"/home/ubuntu/engines/star-pricing-adaptor-service-1.0.jar"
+    },{
+            "name":"TNB JobScheduler",
+            "process_name":"com.swapstech.boss.common.util.JobScheduler"
+    },{
+            "name":"TNB Mongo DB",
+            "process_name":"/usr/bin/mongod --config /etc/mongod.conf"
+    },{
+            "name":"TNB RabbitMQ",
+            "process_name":"/usr/lib/erlang/erts-7.3/bin/beam"
+    }]
+
+}]

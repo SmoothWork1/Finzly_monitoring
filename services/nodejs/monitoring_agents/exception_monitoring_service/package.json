@@ -1,0 +1,12 @@
+{
+  "name": "exception-monitoring-service",
+  "dependencies": {
+    "moment": "^2.29.4",
+    "zlib": "^1.0.5"
+  },
+  "devDependencies": {
+    "serverless-deployment-bucket": "^1.6.0",
+    "serverless-disable-functions": "^1.0.0",
+    "serverless-latest-layer-version": "^2.1.2"
+  }
+}
