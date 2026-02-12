@@ -1,0 +1,148 @@
+import React from 'react';
+import { alertError } from 'config/toast';
+import { saveEnvironmentReq, updEnvironmentReq } from 'config/httpRARoutes';
+import PropTypes from "prop-types";
+import {
+  Modal,
+  ModalBody,
+  ModalHeader,
+  Row,
+  Col,
+  Label
+} from "reactstrap";
+import { Field, Form, Formik } from "formik";
+import * as Yup from "yup";
+
+class EnvironmentModal extends React.Component {
+	constructor(props) {
+		super(props);
+	}
+
+	handleSubmit = (values) => {
+		if(this.props.environment?.id) {
+			updEnvironmentReq({...values, id: this.props.environment.id})
+			.then( (res) => {
+				typeof this.props.close === 'function' && this.props.close({refresh: true});
+			}).catch( (err) => {
+				alertError(err.response?.data?.message || "Could not update environment");
+			});
+		} else {
+			saveEnvironmentReq(values)
+			.then( (res) => {
+				typeof this.props.close === 'function' && this.props.close({refresh: true});
+			}).catch( (err) => {
+				alertError(err.response?.data?.message || "Could not save environment");
+			});
+		}
+	}
+
+	render() {
+		const { environment } = this.props;
+		return (
+			<React.Fragment>
+			<Modal
+				isOpen={this.props.isOpen}
+				role="dialog"
+				autoFocus={true}
+				centered={true}
+				className="exampleModal"
+				tabIndex="-1"
+				toggle={() => {this.props.close()}}
+			>
+				<ModalHeader toggle={() => {this.props.close()}} tag="h4">
+					{`${environment?.id ? 'Update' : 'Add'} Environment`}
+				</ModalHeader>
+				<ModalBody>
+				<Formik
+					enableReinitialize={true}
+					initialValues={{
+						id: (environment && environment.id) || "",
+						display_name: (environment && environment.display_name) || "",
+						status: (environment && environment.status) || "Active",
+					}}
+					validationSchema={Yup.object().shape({
+						id: Yup.string().required(
+							"Please Enter Environment ID"
+						),
+						display_name: Yup.string().required(
+							"Please Enter Environment Display Name"
+						),
+						status: Yup.string().required(
+							"Please Select Environment Status"
+						),
+					})}
+					onSubmit={values => {
+						this.handleSubmit(values);
+					}}
+				>
+					{({ errors, status, touched }) => (
+					<Form>
+						<Row>
+						<Col className="col-12">
+							<div className="mb-3">
+								<Label for="id" className="form-label">
+									ID
+								</Label>
+								<Field
+									name="id"
+									placeholder="Enter Environment ID"
+									type="text"
+									className="form-control"
+								/>
+							</div>
+							<div className="mb-3">
+								<Label for="display_name" className="form-label">
+									Display Name
+								</Label>
+								<Field
+									name="display_name"
+									placeholder="Enter Environment Display Name"
+									type="text"
+									className="form-control"
+								/>
+							</div>
+							<div className="mb-3">
+								<Label className="form-label">
+									Status
+								</Label>
+								<Field
+									name="status"
+									as="select"
+									className="form-control"
+								>
+									<option>Active</option>
+									<option>Inactive</option>
+									<option>Disabled</option>
+								</Field>
+							</div>
+						</Col>
+						</Row>
+						<Row>
+						<Col>
+							<div className="text-end">
+							<button
+								type="submit"
+								className="btn btn-primary save-user"
+							>
+								Save
+							</button>
+							</div>
+						</Col>
+						</Row>
+					</Form>
+					)}
+				</Formik>
+				</ModalBody>
+			</Modal>
+			</React.Fragment>
+		);
+	}
+}
+
+EnvironmentModal.propTypes = {
+	close: PropTypes.func,
+	isOpen: PropTypes.bool,
+	environment: PropTypes.any,
+};
+
+export default EnvironmentModal;
