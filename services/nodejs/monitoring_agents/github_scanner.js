@@ -11,8 +11,8 @@ const { STAGE,REGION} = process.env;
 const GITHUB_API_BASE = 'https://api.github.com';
 const OWNER = 'swapstech';
 const REPO = 'galaxy-ach';
-//const SECRET_ID = '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';
-const SECRET_ID = '76253f79d172c7e877241f1afbe2269cef77553e';
+//const SECRET_ID = '';
+const SECRET_ID = '';
 const patterns = {
     awsAccessKey: /(AKIA[0-9A-Z]{16})/g,
     awsSecretKey: /([0-9a-zA-Z/+]{40})/g,
